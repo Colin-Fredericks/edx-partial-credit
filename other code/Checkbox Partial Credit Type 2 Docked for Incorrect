@@ -1,0 +1,53 @@
+<p>From these data, what can you conclude? Choose all that apply.</p>
+  <script type="text/python" system_path="python_lib">
+def partialcredit1(answer_ids, student_answers, new_cmap, old_cmap):
+    ###############################################################
+    ### Modify these three lines
+    # Choices that are correct (indexed from 1):
+    expect = [1, 4]
+    # Total number of choices:
+    numchoices = 4
+    # Show number of correct choices? (True/False)
+    shownumber = True
+    ### Don't modify anything below!
+    ###############################################################
+
+    # Create the list of choices in edX language
+    for index, item in enumerate(expect):
+        expect[index] = 'choice_' + str(item - 1)
+
+    # Extract data
+    aid = answer_ids[0]
+    try:
+        ans = student_answers[aid]
+
+        score = numchoices
+        if new_cmap.is_correct(aid):
+            # If the student has the correct answer, move on
+            return
+        else:
+            # If the student has the wrong answer, subtract 1 for each wrong answer they have
+            for answer in ans:
+                if answer not in expect:
+                    score -= 1
+            for answer in expect:
+                if answer not in ans:
+                    score -= 1
+    except KeyError:
+        # Occurs when nothing is selected
+        score = numchoices - len(expect)
+
+    hint = "&lt;font color='blue'&gt;" + str(score) + " out of " + str(numchoices) + " of your choices (including boxes you selected and those you left blank) are correct.&lt;/font&gt;"
+    if shownumber:
+        new_cmap.set_hint_and_mode(aid, hint, 'always')
+    new_cmap.set_property(aid, 'npoints', round(score / numchoices, 2))
+</script>
+  <choiceresponse>
+    <checkboxgroup label="From these data, what can you conclude? Choose all that apply." direction="vertical">
+      <choice correct="true">RecG promotes regression of stalled replication forks.</choice>
+      <choice correct="false">RecG does not promote regression of stalled replication forks.</choice>
+      <choice correct="false">RecG-mediated replication fork regression requires RuvC.</choice>
+      <choice correct="true">RuvC alone cannot regress a stalled replication fork (is not sufficient).</choice>
+    </checkboxgroup>
+    <hintgroup hintfn="partialcredit1"/>
+  </choiceresponse>

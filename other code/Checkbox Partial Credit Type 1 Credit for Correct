@@ -1,0 +1,42 @@
+<p>Which <b>two</b> of the following experimental changes could test the existence of such an interaction? Consider each choice as a separate experiment.</p>
+  <script type="text/python" system_path="python_lib">
+def partialcredit1(answer_ids, student_answers, new_cmap, old_cmap):
+    ###############################################################
+    ### Modify these two lines to mark the correct choices (indexed from zero) and the total number of choices
+    expect = ['choice_1','choice_2']
+    numchoices = 5
+    ### Don't modify anything below!
+    ###############################################################
+
+    # Extract data
+    aid = answer_ids[0]
+    try:
+        ans = student_answers[aid]
+
+        score = 0
+        if new_cmap.is_correct(aid):
+            # If the student has the correct answer, move on
+            return
+        else:
+            # Give partial credit for each right answer there is
+            for answer in ans:
+                if answer in expect:
+                    score += 1
+    except KeyError:
+        # Occurs when nothing is selected
+        score = 0
+
+    hint = "&lt;font color='blue'&gt;" + str(score) + " of your choices (counting only selected answers) is correct. &lt;/font&gt;"
+    new_cmap.set_hint_and_mode(aid, hint, 'always')
+    new_cmap.set_property(aid, 'npoints', round(score / 2, 2))
+</script>
+  <choiceresponse>
+    <checkboxgroup label="Which two of the following experimental changes could test the existence of such an interaction?" direction="vertical">
+      <choice correct="false">Add hydroxyurea, which causes replication forks to stall, to the LigaseDox <i>S. cerevisiae</i> cultures before taking samples.</choice>
+      <choice correct="true">Delete the non-essential gene encoding a subunit of a histone chaperone complex in the LigaseDox <i>S. cerevisiae</i> strain.</choice>
+      <choice correct="true">Delete the non-essential gene encoding the Okazaki fragment repair DNA polymerase subunit responsible for processivity in the LigaseDox <i>S. cerevisiae</i> strain.</choice>
+      <choice correct="false">Add a point mutation to the gene encoding DNA primase that increases the processivity of the primase in LigaseDox <i>S. cerevisiae</i>.</choice>
+      <choice correct="false">Synchronize your LigaseDox <i>S. cerevisiae</i> cells with a G1-S phase blocking agent before releasing them into S phase and taking samples.</choice>
+    </checkboxgroup>
+    <hintgroup hintfn="partialcredit1"/>
+  </choiceresponse>
