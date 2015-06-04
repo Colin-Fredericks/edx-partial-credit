@@ -1688,6 +1688,9 @@ class CustomResponse(LoncapaResponse):
                            'annotationinput', 'jsinput', 'formulaequationinput']
     code = None
     expect = None
+    
+    # Standard amount for partial credit if not otherwise specified:
+    default_pc = 0.5
 
     def setup_response(self):
         xml = self.xml
@@ -1866,6 +1869,7 @@ class CustomResponse(LoncapaResponse):
                 npoints = max_points * grade_decimals[k]
             else:
                 npoints = max_points if correct[k] == 'correct' else 0
+                npoints = max_points * default_pc if correct[k] == 'partially-correct' else 0
             correct_map.set(idset[k], correct[k], msg=messages[k],
                             npoints=npoints)
         return correct_map
@@ -1906,13 +1910,27 @@ class CustomResponse(LoncapaResponse):
             )
             if isinstance(ret, dict):
                 # One kind of dictionary the check function can return has the
-                # form {'ok': BOOLEAN, 'msg': STRING, 'grade_decimal' (optional): FLOAT (between 0.0 and 1.0)}
+                # form {'ok': BOOLEAN or STRING, 'msg': STRING, 'grade_decimal' (optional): FLOAT (between 0.0 and 1.0)}
                 # 'ok' will control the checkmark, while grade_decimal, if present, will scale
                 # the score the student receives on the response.
                 # If there are multiple inputs, they all get marked
                 # to the same correct/incorrect value
                 if 'ok' in ret:
-                    correct = ['correct' if ret['ok'] else 'incorrect'] * len(idset)
+                    """
+                    Returning any falsy value for "ok" gives incorrect.
+                    Returning any string that includes "partial" for "ok" gives partial credit.
+                    Returning any other truthy value for "ok" gives correct
+                    """
+                    print "return dictionary ok value: " + ret['ok']
+                    if ret['ok'] == False:
+                        correct = 'incorrect'
+                    elif 'partial' in str(ret['ok']).lower().strip():
+                        correct = 'partially-correct'
+                    else:
+                        correct = 'correct'
+                    correct = [correct] * len(idset)
+                    # old version, no partial credit:
+                    # correct = ['correct' if ret['ok'] else 'incorrect'] * len(idset)
                     msg = ret.get('msg', None)
                     msg = self.clean_message_html(msg)
 
@@ -1927,6 +1945,7 @@ class CustomResponse(LoncapaResponse):
                         decimal = ret['grade_decimal']
                     else:
                         decimal = 1.0 if ret['ok'] else 0.0
+                        decimal = default_pc if 'partial' in str(ret['ok']).lower().strip() else 0.0
                     grade_decimals = [decimal] * len(idset)
                     self.context['grade_decimals'] = grade_decimals
 
@@ -1934,7 +1953,7 @@ class CustomResponse(LoncapaResponse):
                 # the form:
                 # { 'overall_message': STRING,
                 #   'input_list': [
-                #     { 'ok': BOOLEAN, 'msg': STRING, 'grade_decimal' (optional): FLOAT (between 0.0 and 1.0)},
+                #     { 'ok': BOOLEAN or STRING, 'msg': STRING, 'grade_decimal' (optional): FLOAT (between 0.0 and 1.0)},
                 #   ...
                 #   ]
                 # }
@@ -1951,9 +1970,24 @@ class CustomResponse(LoncapaResponse):
                     correct = []
                     messages = []
                     grade_decimals = []
+                    """
+                    Returning any falsy value for "ok" gives incorrect.
+                    Returning any string that includes "partial" for "ok" gives partial credit.
+                    Returning any other truthy value for "ok" gives correct
+                    """
                     for input_dict in input_list:
-                        correct.append('correct'
-                                       if input_dict['ok'] else 'incorrect')
+                        print "input_dict ok value: " + input_dict['ok']
+                        if input_dict['ok'] == False:
+                            correct.append('incorrect')
+                        elif 'partial' in str(input_dict['ok']).lower().strip():
+                            correct.append('partially-correct')
+                        else:
+                            correct.append('correct')
+                            
+                        # old version, no partial credit 
+                        # correct.append('correct'
+                        #                if input_dict['ok'] else 'incorrect')
+                        
                         msg = (self.clean_message_html(input_dict['msg'])
                                if 'msg' in input_dict else None)
                         messages.append(msg)
@@ -1961,6 +1995,7 @@ class CustomResponse(LoncapaResponse):
                             decimal = input_dict['grade_decimal']
                         else:
                             decimal = 1.0 if input_dict['ok'] else 0.0
+                            decimal = default_pc if 'partial' in str(input_dict['ok']).lower().strip() else 0.0
                         grade_decimals.append(decimal)
 
                     self.context['messages'] = messages
@@ -1977,7 +2012,24 @@ class CustomResponse(LoncapaResponse):
                     )
 
             else:
-                correct = ['correct' if ret else 'incorrect'] * len(idset)
+                """
+                Returning any falsy value for "ok" gives incorrect.
+                Returning any string that includes "partial" for "ok" gives partial credit.
+                Returning any other truthy value for "ok" gives correct
+                """
+                
+                print "Single return value: " + str(ret)
+                
+                if ret == False:
+                    correct ='incorrect'
+                elif 'partial' in str(ret).lower().strip():
+                    correct = 'partially-correct'
+                else:
+                    correct = 'correct'
+                correct = [correct] * len(idset)
+
+                # old version, no partial credit:
+                # correct = ['correct' if ret else 'incorrect'] * len(idset)
 
             self.context['correct'] = correct
 
