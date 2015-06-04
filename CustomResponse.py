@@ -307,7 +307,7 @@ class CustomResponse(LoncapaResponse):
                     """
                     for input_dict in input_list:
                         print "input_dict ok value: " + input_dict['ok']
-                        if input_dict['ok'] == False or input_dict['ok'].lower().strip() == "false"::
+                        if input_dict['ok'] == False or input_dict['ok'].lower().strip() == "false":
                             correct.append('incorrect')
                         elif 'partial' in str(input_dict['ok']).lower().strip():
                             correct.append('partially-correct')
