@@ -199,7 +199,7 @@ class CustomResponse(LoncapaResponse):
                 npoints = max_points * grade_decimals[k]
             else:
                 npoints = max_points if correct[k] == 'correct' else 0
-                npoints = max_points * default_pc if correct[k] == 'partially-correct' else 0
+                npoints = max_points * self.default_pc if correct[k] == 'partially-correct' else 0
             correct_map.set(idset[k], correct[k], msg=messages[k],
                             npoints=npoints)
         return correct_map
@@ -275,7 +275,7 @@ class CustomResponse(LoncapaResponse):
                         decimal = ret['grade_decimal']
                     else:
                         decimal = 1.0 if ret['ok'] else 0.0
-                        decimal = default_pc if 'partial' in str(ret['ok']).lower().strip() else 0.0
+                        decimal = self.default_pc if 'partial' in str(ret['ok']).lower().strip() else 0.0
                     grade_decimals = [decimal] * len(idset)
                     self.context['grade_decimals'] = grade_decimals
 
@@ -325,7 +325,7 @@ class CustomResponse(LoncapaResponse):
                             decimal = input_dict['grade_decimal']
                         else:
                             decimal = 1.0 if input_dict['ok'] else 0.0
-                            decimal = default_pc if 'partial' in str(input_dict['ok']).lower().strip() else 0.0
+                            decimal = self.default_pc if 'partial' in str(input_dict['ok']).lower().strip() else 0.0
                         grade_decimals.append(decimal)
 
                     self.context['messages'] = messages
