@@ -950,7 +950,8 @@ class MultipleChoiceResponse(LoncapaResponse):
         if (self.answer_id in student_answers
                 and student_answers[self.answer_id] in self.correct_choices):
             return CorrectMap(self.answer_id, correctness='correct')
-        elif credit_type == 'points' and (self.answer_id in student_answers
+        elif (credit_type == 'points' 
+                and self.answer_id in student_answers
                 and student_answers[self.answer_id] in self.partial_choices):
             choice_index = self.partial_choices.index(student_answers[self.answer_id])
             credit_amount = self.partial_values[choice_index]
@@ -1197,6 +1198,7 @@ class TrueFalseResponse(MultipleChoiceResponse):
         return CorrectMap(self.answer_id, 'incorrect')
 
 #-----------------------------------------------------------------------------
+
 @registry.register
 class OptionResponse(LoncapaResponse):
     """
