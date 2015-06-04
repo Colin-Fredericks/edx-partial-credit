@@ -251,9 +251,10 @@ class CustomResponse(LoncapaResponse):
                     Returning any string that includes "partial" for "ok" gives partial credit.
                     Returning any other truthy value for "ok" gives correct
                     """
+                    print "return dictionary ok value: " + ret['ok']
                     if ret['ok'] == False:
                         correct = 'incorrect'
-                    elif 'partial' in str(ret['ok']):
+                    elif 'partial' in str(ret['ok']).lower().strip():
                         correct = 'partially-correct'
                     else:
                         correct = 'correct'
@@ -274,7 +275,7 @@ class CustomResponse(LoncapaResponse):
                         decimal = ret['grade_decimal']
                     else:
                         decimal = 1.0 if ret['ok'] else 0.0
-                        decimal = default_pc if 'partial' in str(ret['ok']) else 0.0
+                        decimal = default_pc if 'partial' in str(ret['ok']).lower().strip() else 0.0
                     grade_decimals = [decimal] * len(idset)
                     self.context['grade_decimals'] = grade_decimals
 
@@ -305,9 +306,10 @@ class CustomResponse(LoncapaResponse):
                     Returning any other truthy value for "ok" gives correct
                     """
                     for input_dict in input_list:
+                        print "input_dict ok value: " + input_dict['ok']
                         if input_dict['ok'] == False:
                             correct.append('incorrect')
-                        elif 'partial' in str(input_dict['ok']):
+                        elif 'partial' in str(input_dict['ok']).lower().strip():
                             correct.append('partially-correct')
                         else:
                             correct.append('correct')
@@ -323,7 +325,7 @@ class CustomResponse(LoncapaResponse):
                             decimal = input_dict['grade_decimal']
                         else:
                             decimal = 1.0 if input_dict['ok'] else 0.0
-                            decimal = default_pc if 'partial' in str(input_dict['ok']) else 0.0
+                            decimal = default_pc if 'partial' in str(input_dict['ok']).lower().strip() else 0.0
                         grade_decimals.append(decimal)
 
                     self.context['messages'] = messages
@@ -346,9 +348,11 @@ class CustomResponse(LoncapaResponse):
                 Returning any other truthy value for "ok" gives correct
                 """
                 
+                print "Single return value: " + str(ret)
+                
                 if ret == False:
                     correct ='incorrect'
-                elif 'partial' in str(ret):
+                elif 'partial' in str(ret).lower().strip():
                     correct = 'partially-correct'
                 else:
                     correct = 'correct'
