@@ -37,21 +37,21 @@ class MultipleChoiceResponse(LoncapaResponse):
         cxml = xml.xpath('//*[@id=$id]//choice', id=xml.get('id'))
 
         # contextualize correct attribute and then select ones for which
-        # correct = "true", with separate list for correct="partial"
+        # correct = "true", with separate list for those with partial credit point values.
         self.correct_choices = [
             contextualize_text(choice.get('name'), self.context)
             for choice in cxml
-            if contextualize_text(choice.get('correct'), self.context) == "true"
+            if contextualize_text(choice.get('correct'), self.context) == 'true'
         ]
         self.partial_choices = [
             contextualize_text(choice.get('name'), self.context)
             for choice in cxml
-            if contextualize_text(choice.get('correct'), self.context) == "partial"
+            if contextualize_text(choice.get('point_value', default=''), self.context) != ''
         ]
         self.partial_values = [
-            float(choice.get('partial_credit', default='0.5'))    # Default partial credit: 50%
+            float(choice.get('point_value', default='0.5'))    # Default partial credit: 50%
             for choice in cxml
-            if contextualize_text(choice.get('correct'), self.context) == "partial"
+            if contextualize_text(choice.get('point_value', default=''), self.context) != ''
         ]
 
     def mc_setup_response(self):
@@ -99,10 +99,25 @@ class MultipleChoiceResponse(LoncapaResponse):
         """
         # log.debug('%s: student_answers=%s, correct_choices=%s' % (
         #   unicode(self), student_answers, self.correct_choices))
+        
+        tree = self.xml
+        partialcredit = tree.xpath('choicegroup[@partial_credit]')
+        credit_type = False
+        if partialcredit:
+            credit_type = partialcredit[0].get('partial_credit')
+
+            try:
+                credit_type = str(credit_type).lower().strip()
+            except ValueError:
+                _ = self.capa_system.i18n.ugettext
+                # Translators: 'partial_credit' is an attribute name and should not be translated.
+                msg = _("partial_credit value can only be set to 'points' or removed.")
+                raise LoncapaProblemError(msg)
+        
         if (self.answer_id in student_answers
                 and student_answers[self.answer_id] in self.correct_choices):
             return CorrectMap(self.answer_id, correctness='correct')
-        elif (self.answer_id in student_answers
+        elif credit_type == 'points' and (self.answer_id in student_answers
                 and student_answers[self.answer_id] in self.partial_choices):
             choice_index = self.partial_choices.index(student_answers[self.answer_id])
             credit_amount = self.partial_values[choice_index]
