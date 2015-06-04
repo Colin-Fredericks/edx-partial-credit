@@ -112,24 +112,24 @@ class ChoiceResponse(LoncapaResponse):
         
         """
         This below checks to see whether we're using an alternate grading scheme.
-          Set partial-credit="false" (or remove it) to require an exact answer for any credit.
-          Set partial-credit="EDC" to count each choice for equal points (Every Decision Counts).
-          Set partial-credit="halves" to take half credit off for each error.
+          Set partial_credit="false" (or remove it) to require an exact answer for any credit.
+          Set partial_credit="EDC" to count each choice for equal points (Every Decision Counts).
+          Set partial_credit="halves" to take half credit off for each error.
         """
         
         tree = self.xml
-        partialcredit = tree.xpath('checkboxgroup[@partial-credit]')
+        partialcredit = tree.xpath('checkboxgroup[@partial_credit]')
         
         if partialcredit:
         
-            credit_type = partialcredit[0].get('partial-credit')
+            credit_type = partialcredit[0].get('partial_credit')
 
             try:
                 credit_type = str(credit_type).lower()
             except ValueError:
                 _ = self.capa_system.i18n.ugettext
-                # Translators: 'partial-credit' is an attribute name and should not be translated.
-                msg = _("partial-credit value should be one of 'EDC', 'halves', or 'false'.")
+                # Translators: 'partial_credit' is an attribute name and should not be translated.
+                msg = _("partial_credit value should be one of 'EDC', 'halves', or 'false'.")
                 raise LoncapaProblemError(msg)
                 
             if credit_type == 'false':

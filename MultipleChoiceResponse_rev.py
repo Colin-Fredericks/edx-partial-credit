@@ -49,7 +49,7 @@ class MultipleChoiceResponse(LoncapaResponse):
             if contextualize_text(choice.get('correct'), self.context) == "partial"
         ]
         self.partial_values = [
-            float(choice.get('partial-credit', default='0.5'))    # Default partial credit: 50%
+            float(choice.get('partial_credit', default='0.5'))    # Default partial credit: 50%
             for choice in cxml
             if contextualize_text(choice.get('correct'), self.context) == "partial"
         ]

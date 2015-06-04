@@ -120,7 +120,7 @@ class NumericalResponse(LoncapaResponse):
         problem_xml = tree.xpath('.')
         
         # Partial credit type - can set 'close' or 'list'
-        credit_type = problem_xml[0].get('partial-credit', default=False)
+        credit_type = problem_xml[0].get('partial_credit', default=False)
         
         # Allowing for multiple partial credit types. Divide on commas, strip whitespace.
         credit_type = credit_type.split(',')
@@ -195,15 +195,15 @@ class NumericalResponse(LoncapaResponse):
             Partial credit is available in three cases:
             - If the student answer is within expanded tolerance of the actual answer,
               the student gets 50% credit. (Currently set as the default.)
-              Set via partial-credit="close" in the numericalresponse tag.
+              Set via partial_credit="close" in the numericalresponse tag.
               
             - If the student answer is within regular tolerance of an alternative answer, 
               the student gets 50% credit. (Same default.)
-              Set via partial-credit="list"
+              Set via partial_credit="list"
               
             - If the student answer is within expanded tolerance of an alternative answer,
               the student gets 25%. (We take the 50% and square it, at the moment.)
-              Set via partial-credit="list,close" or "close, list" or the like.
+              Set via partial_credit="list,close" or "close, list" or the like.
             """
             
             if str(self.tolerance).endswith('%'):

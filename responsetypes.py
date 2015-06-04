@@ -751,24 +751,24 @@ class ChoiceResponse(LoncapaResponse):
         
         """
         This below checks to see whether we're using an alternate grading scheme.
-          Set partial-credit="false" (or remove it) to require an exact answer for any credit.
-          Set partial-credit="EDC" to count each choice for equal points (Every Decision Counts).
-          Set partial-credit="halves" to take half credit off for each error.
+          Set partial_credit="false" (or remove it) to require an exact answer for any credit.
+          Set partial_credit="EDC" to count each choice for equal points (Every Decision Counts).
+          Set partial_credit="halves" to take half credit off for each error.
         """
         
         tree = self.xml
-        partialcredit = tree.xpath('checkboxgroup[@partial-credit]')
+        partialcredit = tree.xpath('checkboxgroup[@partial_credit]')
         
         if partialcredit:
         
-            credit_type = partialcredit[0].get('partial-credit')
+            credit_type = partialcredit[0].get('partial_credit')
 
             try:
                 credit_type = str(credit_type).lower()
             except ValueError:
                 _ = self.capa_system.i18n.ugettext
-                # Translators: 'partial-credit' is an attribute name and should not be translated.
-                msg = _("partial-credit value should be one of 'EDC', 'halves', or 'false'.")
+                # Translators: 'partial_credit' is an attribute name and should not be translated.
+                msg = _("partial_credit value should be one of 'EDC', 'halves', or 'false'.")
                 raise LoncapaProblemError(msg)
                 
             if credit_type == 'false':
@@ -882,7 +882,7 @@ class MultipleChoiceResponse(LoncapaResponse):
             if contextualize_text(choice.get('correct'), self.context) == "partial"
         ]
         self.partial_values = [
-            float(choice.get('partial-credit', default='0.5'))    # Default partial credit: 50%
+            float(choice.get('partial_credit', default='0.5'))    # Default partial credit: 50%
             for choice in cxml
             if contextualize_text(choice.get('correct'), self.context) == "partial"
         ]
@@ -1387,7 +1387,7 @@ class NumericalResponse(LoncapaResponse):
         problem_xml = tree.xpath('.')
         
         # Partial credit type - can set 'close' or 'list'
-        credit_type = problem_xml[0].get('partial-credit', default=False)
+        credit_type = problem_xml[0].get('partial_credit', default=False)
         
         # Allowing for multiple partial credit types. Divide on commas, strip whitespace.
         credit_type = credit_type.split(',')
@@ -1463,15 +1463,15 @@ class NumericalResponse(LoncapaResponse):
             Partial credit is available in three cases:
             - If the student answer is within expanded tolerance of the actual answer,
               the student gets 50% credit. (Currently set as the default.)
-              Set via partial-credit="close" in the numericalresponse tag.
+              Set via partial_credit="close" in the numericalresponse tag.
               
             - If the student answer is within regular tolerance of an alternative answer, 
               the student gets 50% credit. (Same default.)
-              Set via partial-credit="list"
+              Set via partial_credit="list"
               
             - If the student answer is within expanded tolerance of an alternative answer,
               the student gets 25%. (We take the 50% and square it, at the moment.)
-              Set via partial-credit="list,close" or "close, list" or the like.
+              Set via partial_credit="list,close" or "close, list" or the like.
             """
             
             if str(self.tolerance).endswith('%'):
