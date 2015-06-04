@@ -879,12 +879,12 @@ class MultipleChoiceResponse(LoncapaResponse):
         self.partial_choices = [
             contextualize_text(choice.get('name'), self.context)
             for choice in cxml
-            if contextualize_text(choice.get('point_value', default=''), self.context) != ''
+            if contextualize_text(choice.get('correct'), self.context) == 'partial'
         ]
         self.partial_values = [
             float(choice.get('point_value', default='0.5'))    # Default partial credit: 50%
             for choice in cxml
-            if contextualize_text(choice.get('point_value', default=''), self.context) != ''
+            if contextualize_text(choice.get('correct'), self.context) == 'partial'
         ]
 
     def mc_setup_response(self):
@@ -1197,7 +1197,6 @@ class TrueFalseResponse(MultipleChoiceResponse):
         return CorrectMap(self.answer_id, 'incorrect')
 
 #-----------------------------------------------------------------------------
-
 @registry.register
 class OptionResponse(LoncapaResponse):
     """
