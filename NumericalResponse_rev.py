@@ -127,17 +127,17 @@ class NumericalResponse(LoncapaResponse):
         credit_type = [word.strip().lower() for word in credit_type]
         
         # What multiple of the tolerance is worth partial credit?
-        has_partial_range = tree.xpath('responseparam[@partial-range]')
+        has_partial_range = tree.xpath('responseparam[@partial_range]')
         if has_partial_range:
-            partial_range = has_partial_range[0].get('partial-range', default='2')
+            partial_range = has_partial_range[0].get('partial_range', default='2')
             partial_range = float(re.sub('\D', '', partial_range)) # Keep only digits in case people want to write 'x2' or '2x'
         else:
             partial_range = 2
         
         # Take in alternative answers that are worth partial credit.
-        has_partial_answers = tree.xpath('responseparam[@partial-answers]')
+        has_partial_answers = tree.xpath('responseparam[@partial_answers]')
         if has_partial_answers:
-            partial_answers = has_partial_answers[0].get('partial-answers').split(',')
+            partial_answers = has_partial_answers[0].get('partial_answers').split(',')
             for index, word in enumerate(partial_answers):
                 partial_answers[index] = word.strip()
                 partial_answers[index] = self.get_staff_ans(partial_answers[index])
