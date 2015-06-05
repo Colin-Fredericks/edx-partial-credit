@@ -101,28 +101,30 @@ class MultipleChoiceResponse(LoncapaResponse):
         #   unicode(self), student_answers, self.correct_choices))
         
         tree = self.xml
-        partialcredit = tree.xpath('choicegroup[@partial_credit]')
-        credit_type = False
-        if partialcredit:
-            credit_type = partialcredit[0].get('partial_credit')
+        problem_xml = tree.xpath('.')
 
-            try:
-                credit_type = str(credit_type).lower().strip()
-            except ValueError:
-                _ = self.capa_system.i18n.ugettext
-                # Translators: 'partial_credit' is an attribute name and should not be translated.
-                msg = _("partial_credit value can only be set to 'points' or removed.")
-                raise LoncapaProblemError(msg)
+        # Partial credit type - can set 'points' only at the moment.
+        credit_type = problem_xml[0].get('partial_credit', default=False)
+
+        try:
+            credit_type = str(credit_type).lower().strip()
+        except ValueError:
+            _ = self.capa_system.i18n.ugettext
+            # Translators: 'partial_credit' is an attribute name and should not be translated.
+            msg = _("partial_credit value can only be set to 'points' or be removed.")
+            raise LoncapaProblemError(msg)
         
         if (self.answer_id in student_answers
                 and student_answers[self.answer_id] in self.correct_choices):
             return CorrectMap(self.answer_id, correctness='correct')
+            
         elif (credit_type == 'points' 
                 and self.answer_id in student_answers
                 and student_answers[self.answer_id] in self.partial_choices):
             choice_index = self.partial_choices.index(student_answers[self.answer_id])
             credit_amount = self.partial_values[choice_index]
             return CorrectMap(self.answer_id, correctness='partially-correct', npoints=credit_amount)
+            
         else:
             return CorrectMap(self.answer_id, 'incorrect')
 

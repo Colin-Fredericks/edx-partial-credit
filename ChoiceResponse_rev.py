@@ -118,65 +118,64 @@ class ChoiceResponse(LoncapaResponse):
         """
         
         tree = self.xml
-        partialcredit = tree.xpath('checkboxgroup[@partial_credit]')
-        
-        if partialcredit:
-        
-            credit_type = partialcredit[0].get('partial_credit')
+        problem_xml = tree.xpath('.')
 
-            try:
-                credit_type = str(credit_type).lower()
-            except ValueError:
-                _ = self.capa_system.i18n.ugettext
-                # Translators: 'partial_credit' is an attribute name and should not be translated.
-                msg = _("partial_credit value should be one of 'EDC', 'halves', or 'false'.")
-                raise LoncapaProblemError(msg)
-                
-            if credit_type == 'false':
+        # Partial credit type - can set 'points' only at the moment.
+        credit_type = problem_xml[0].get('partial_credit', default=False)
+
+        try:
+            credit_type = str(credit_type).lower().strip()
+        except ValueError:
+            _ = self.capa_system.i18n.ugettext
+            # Translators: 'partial_credit' is an attribute name and should not be translated.
+            msg = _("partial_credit value should be one of 'EDC', 'halves', or 'false'.")
+            raise LoncapaProblemError(msg)
             
-                pass
+        if credit_type == 'false':
+        
+            pass
 
-            elif credit_type == 'halves':
+        elif credit_type == 'halves':
+        
+            halves_error_count = 0
             
-                halves_error_count = 0
-                
-                for answer in student_answer:
-                    if answer in self.incorrect_choices:
-                        halves_error_count += 1
-                for answer in student_non_answers:
-                    if answer in self.correct_choices:
-                        halves_error_count += 1
-                
-                if halves_error_count == 0:
-                    return_grade = self.get_max_score()
-                    return CorrectMap(self.answer_id, correctness='correct', npoints=return_grade)
-                elif halves_error_count == 1:
-                    return_grade = round(self.get_max_score() / 2.0, 2)
-                    return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
-                elif halves_error_count == 2:
-                    return_grade = round(self.get_max_score() / 4.0, 2)
-                    return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
-                else:
-                    return CorrectMap(self.answer_id, 'incorrect')
-                
-            elif credit_type == 'EDC':
-                                    
-                EDC_max_grade = len(all_choices)
-                EDC_current_grade = 0
-                
-                for answer in student_answer:
-                    if answer in self.correct_choices:
-                        EDC_current_grade += 1
-                for answer in student_non_answers:
-                    if answer in self.incorrect_choices:
-                        EDC_current_grade += 1
-                
-                return_grade = round(self.get_max_score() * float(EDC_current_grade) / float(EDC_max_grade) , 2)
+            for answer in student_answer:
+                if answer in self.incorrect_choices:
+                    halves_error_count += 1
+            for answer in student_non_answers:
+                if answer in self.correct_choices:
+                    halves_error_count += 1
+            
+            if halves_error_count == 0:
+                return_grade = self.get_max_score()
+                return CorrectMap(self.answer_id, correctness='correct', npoints=return_grade)
+            elif halves_error_count == 1:
+                return_grade = round(self.get_max_score() / 2.0, 2)
+                return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
+            elif halves_error_count == 2:
+                return_grade = round(self.get_max_score() / 4.0, 2)
+                return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
+            else:
+                return CorrectMap(self.answer_id, 'incorrect')
+            
+        elif credit_type == 'edc':
+                                
+            EDC_max_grade = len(all_choices)
+            EDC_current_grade = 0
+            
+            for answer in student_answer:
+                if answer in self.correct_choices:
+                    EDC_current_grade += 1
+            for answer in student_non_answers:
+                if answer in self.incorrect_choices:
+                    EDC_current_grade += 1
+            
+            return_grade = round(self.get_max_score() * float(EDC_current_grade) / float(EDC_max_grade) , 2)
 
-                if EDC_current_grade > 0:
-                    return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
-                else:
-                    return CorrectMap(self.answer_id, correctness='incorrect', npoints=0)
+            if EDC_current_grade > 0:
+                return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
+            else:
+                return CorrectMap(self.answer_id, correctness='incorrect', npoints=0)
         
         required_selected = len(self.correct_choices - student_answer) == 0
         no_extra_selected = len(student_answer - self.correct_choices) == 0

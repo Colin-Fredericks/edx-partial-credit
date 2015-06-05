@@ -272,7 +272,7 @@ class CustomResponse(LoncapaResponse):
                         self.context['messages'][0] = msg
 
                     if 'grade_decimal' in ret:
-                        decimal = ret['grade_decimal']
+                        decimal = float(ret['grade_decimal'])
                     else:
                         decimal = 1.0 if ret['ok'] else 0.0
                         decimal = self.default_pc if 'partial' in str(ret['ok']).lower().strip() else 0.0
