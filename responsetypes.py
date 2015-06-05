@@ -1426,7 +1426,6 @@ class NumericalResponse(LoncapaResponse):
         else:
             partial_answers = False
         
-        print partial_answers
         partial_score = 0.5
         
         cmap = CorrectMap(self.answer_id)
@@ -1932,11 +1931,11 @@ class CustomResponse(LoncapaResponse):
                 # to the same correct/incorrect value
                 if 'ok' in ret:
                     """
-                    Returning any falsy value or the word "False" for "ok" gives incorrect.
+                    Returning any falsy value or the "false" string for "ok" gives incorrect.
                     Returning any string that includes "partial" for "ok" gives partial credit.
                     Returning any other truthy value for "ok" gives correct
                     """
-                    print "return dictionary ok value: " + ret['ok']
+
                     if ret['ok'] == False or ret["ok"].lower().strip() == "false":
                         correct = 'incorrect'
                     elif 'partial' in str(ret['ok']).lower().strip():
@@ -1957,7 +1956,7 @@ class CustomResponse(LoncapaResponse):
                         self.context['messages'][0] = msg
 
                     if 'grade_decimal' in ret:
-                        decimal = ret['grade_decimal']
+                        decimal = float(ret['grade_decimal'])
                     else:
                         decimal = 1.0 if ret['ok'] else 0.0
                         decimal = self.default_pc if 'partial' in str(ret['ok']).lower().strip() else 0.0
@@ -1986,12 +1985,11 @@ class CustomResponse(LoncapaResponse):
                     messages = []
                     grade_decimals = []
                     """
-                    Returning any falsy value for "ok" gives incorrect.
+                    Returning any falsy value or the "false" string for "ok" gives incorrect.
                     Returning any string that includes "partial" for "ok" gives partial credit.
                     Returning any other truthy value for "ok" gives correct
                     """
                     for input_dict in input_list:
-                        print "input_dict ok value: " + input_dict['ok']
                         if input_dict['ok'] == False or input_dict['ok'].lower().strip() == "false":
                             correct.append('incorrect')
                         elif 'partial' in str(input_dict['ok']).lower().strip():
@@ -2028,12 +2026,10 @@ class CustomResponse(LoncapaResponse):
 
             else:
                 """
-                Returning any falsy value for "ok" gives incorrect.
+                Returning any falsy value or the "false" string for "ok" gives incorrect.
                 Returning any string that includes "partial" for "ok" gives partial credit.
                 Returning any other truthy value for "ok" gives correct
                 """
-                
-                print "Single return value: " + str(ret)
                 
                 if ret == False or ret.lower().strip() == "false":
                     correct ='incorrect'

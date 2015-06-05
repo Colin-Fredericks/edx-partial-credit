@@ -251,8 +251,8 @@ class CustomResponse(LoncapaResponse):
                     Returning any string that includes "partial" for "ok" gives partial credit.
                     Returning any other truthy value for "ok" gives correct
                     """
-                    print "return dictionary ok value: " + ret['ok']
-                    if ret['ok'] == False or ret["ok"].lower().strip() == "false":
+
+                    if ret['ok'] == False or ret['ok'].lower().strip() == 'false':
                         correct = 'incorrect'
                     elif 'partial' in str(ret['ok']).lower().strip():
                         correct = 'partially-correct'
@@ -306,7 +306,6 @@ class CustomResponse(LoncapaResponse):
                     Returning any other truthy value for "ok" gives correct
                     """
                     for input_dict in input_list:
-                        print "input_dict ok value: " + input_dict['ok']
                         if input_dict['ok'] == False or input_dict['ok'].lower().strip() == "false":
                             correct.append('incorrect')
                         elif 'partial' in str(input_dict['ok']).lower().strip():
@@ -347,10 +346,8 @@ class CustomResponse(LoncapaResponse):
                 Returning any string that includes "partial" for "ok" gives partial credit.
                 Returning any other truthy value for "ok" gives correct
                 """
-                
-                print "Single return value: " + str(ret)
-                
-                if ret == False or ret.lower().strip() == "false":
+                                
+                if ret == False or ret.lower().strip() == 'false':
                     correct ='incorrect'
                 elif 'partial' in str(ret).lower().strip():
                     correct = 'partially-correct'

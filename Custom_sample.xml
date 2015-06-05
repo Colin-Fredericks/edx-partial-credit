@@ -9,12 +9,14 @@ def test_add(expect, ans):
     except ValueError:
         return { 'ok': False, 'msg': 'bad input variables' }
     
-    if a2 == "True":
+    if a2.lower() == 'true':
         return { 'ok': 'True', 'msg': a1 }
-    if a2 == "Partial":
+    elif a2.lower() == 'partial':
         return { 'ok': 'Partial', 'msg': a1, 'grade_decimal': '0.6' }
-    if a2 == "False":
+    elif a2.lower() == 'false':
         return { 'ok': 'False', 'msg': a1 }
+    else:
+        return { 'ok': False, 'msg': 'You typed something else in line 2.' }
 
 </script>
 
