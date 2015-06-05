@@ -247,7 +247,7 @@ class CustomResponse(LoncapaResponse):
                 # to the same correct/incorrect value
                 if 'ok' in ret:
                     """
-                    Returning any falsy value or the word "False" for "ok" gives incorrect.
+                    Returning any falsy value or the "false" string for "ok" gives incorrect.
                     Returning any string that includes "partial" for "ok" gives partial credit.
                     Returning any other truthy value for "ok" gives correct
                     """
@@ -301,7 +301,7 @@ class CustomResponse(LoncapaResponse):
                     messages = []
                     grade_decimals = []
                     """
-                    Returning any falsy value for "ok" gives incorrect.
+                    Returning any falsy value or the "false" string for "ok" gives incorrect.
                     Returning any string that includes "partial" for "ok" gives partial credit.
                     Returning any other truthy value for "ok" gives correct
                     """
@@ -343,7 +343,7 @@ class CustomResponse(LoncapaResponse):
 
             else:
                 """
-                Returning any falsy value for "ok" gives incorrect.
+                Returning any falsy value or the "false" string for "ok" gives incorrect.
                 Returning any string that includes "partial" for "ok" gives partial credit.
                 Returning any other truthy value for "ok" gives correct
                 """
