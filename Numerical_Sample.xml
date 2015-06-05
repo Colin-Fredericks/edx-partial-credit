@@ -1,0 +1,40 @@
+<problem>
+
+  <p>This numerical problem gives partial credit for an answer in kilometers rather than miles.</p>
+  <ul>
+    <li>To allow closer answers, set <i>partial_credit="close"</i> in the numericalresponse tag. <ul>
+        <li>You may specify a <i>partial_range="#"</i> attribute if you like, which multiplies the existing tolerance to get the expanded range. The default is 2. Non-numerical characters are dropped, so you can write "4x" instead of "4" if that helps you remember.</li></ul></li>
+    <li>To give a set of alternative answers, set <i>partial_credit="list"</i> and create a responseparam tag with <i>partial_answers="ans1,ans2,ans3,..."</i>.</li>
+    <li>To do both, use <i>partial_credit="close,list"</i> and set up the extra responseparam tag as well.</li>
+  </ul>
+
+<p>_____________________________________________________________________________</p>
+
+<p>How many miles away from Earth is the sun? Use scientific notation to answer. Numerical tolerance of 100,000.</p>
+
+<numericalresponse answer="93*10^6" partial_credit="list">
+  <formulaequationinput label="How many miles away from Earth is the sun? Use scientific notation to answer." />
+  <responseparam type="tolerance" default="100000" partial_range="x3" />
+  <responseparam partial_answers="150*10^6" />
+</numericalresponse>
+
+<solution>
+<div class="detailed-solution">
+<p>Explanation</p>
+
+<p>The sun is 93,000,000, or 9.3*10^6, miles away from Earth.</p>
+
+</div>
+</solution>
+
+</problem>
+
+
+<problem>
+<p>How many miles away from Earth is the sun? Use scientific notation to answer. Percentage tolerance of 1%, with partial credit allowed out to 3%.</p>
+
+<numericalresponse answer="93*10^6" partial_credit="close">
+  <formulaequationinput label="How many miles away from Earth is the sun? Use scientific notation to answer." />
+  <responseparam type="tolerance" default="1%" partial-range="x3"/>
+</numericalresponse>
+</problem>

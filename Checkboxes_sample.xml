@@ -1,0 +1,51 @@
+<problem>
+
+<p>This problem gives partial credit on the Every Decision Counts (EDC) basis. Each checkbox is equally weighted.</p>
+
+<p>The following languages are in the Indo-European family:</p>
+<choiceresponse partial_credit="EDC">
+  <checkboxgroup label="The following languages are in the Indo-European family:" direction="vertical">
+    <choice correct="true">Urdu (true)</choice>
+    <choice correct="false">Finnish (false)</choice>
+    <choice correct="true">Marathi (true)</choice>
+    <choice correct="true">French (true)</choice>
+    <choice correct="false">Hungarian (false)</choice>
+  </checkboxgroup>
+</choiceresponse>
+  
+<solution>
+<div class="detailed-solution">
+<p>Explanation</p>
+
+<p>Urdu, Marathi, and French are all Indo-European languages, while Finnish and Hungarian are in the Uralic family.</p>
+
+</div>
+</solution>
+
+</problem>
+
+
+<problem>
+  <p>This problem gives partial credit on the Halves basis. Full credit is awarded for a 100% correct answer, with half credit for one mistake and 1/4 credit for two mistakes.</p>
+
+<p>The following languages are in the Indo-European family:</p>
+<choiceresponse partial_credit="halves">
+  <checkboxgroup label="The following languages are in the Indo-European family:" direction="vertical">
+    <choice correct="true">Urdu (true)</choice>
+    <choice correct="false">Finnish (false)</choice>
+    <choice correct="true">Marathi (true)</choice>
+    <choice correct="true">French (true)</choice>
+    <choice correct="false">Hungarian (false)</choice>
+  </checkboxgroup>
+</choiceresponse>
+
+<solution>
+<div class="detailed-solution">
+<p>Explanation</p>
+
+<p>Urdu, Marathi, and French are all Indo-European languages, while Finnish and Hungarian are in the Uralic family.</p>
+
+</div>
+</solution>
+
+</problem>

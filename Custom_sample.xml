@@ -1,0 +1,34 @@
+<problem>
+
+<script type="loncapa/python">
+
+def test_add(expect, ans):
+    try:
+        a1=str(ans[0])
+        a2=str(ans[1])
+    except ValueError:
+        return { 'ok': False, 'msg': 'bad input variables' }
+    
+    if a2 == "True":
+        return { 'ok': 'True', 'msg': a1 }
+    if a2 == "Partial":
+        return { 'ok': 'Partial', 'msg': a1, 'grade_decimal': '0.6' }
+    if a2 == "False":
+        return { 'ok': 'False', 'msg': a1 }
+
+</script>
+
+<p>This is a custom Python problem. This one in particular uses the simple dict return style; you can see the rest of the <a href="https://edx.readthedocs.org/projects/edx-partner-course-staff/en/latest/exercises_tools/custom_python.html" target="_blank">return styles</a> at the docs.</p>
+
+<p>Where it used to say you could return True or False, you can now return those, or "True" or "False" or "Partial" (or those in lowercase, for that matter). Setting "Partial" gives 50% credit by default, or you can set a grade_decimal value in your return dict.</p>
+
+<p>You do <i>not</i> need to add any <i>partial_credit="whatever"</i> attribute in these problems, because the grading is controlled in your own python code.</p>
+
+<fieldset>
+  <legend>First line: your custom message. Second line: True, False, or Partial.</legend>
+  <customresponse cfn="test_add" expect="20">
+    <textline size="40" label="Message"/><br/>
+    <textline size="40" label="Correctness"/>
+  </customresponse>
+</fieldset>
+</problem>

@@ -1,0 +1,26 @@
+<problem>
+<p>This problem assigns partial credit for Brazil. It uses a "points" style where a partially correct choice is worth 50% credit, or a different amount as specified by the <i>point_value</i> attribute. </p>
+<p>Which of the following countries has the largest population?</p>
+<multiplechoiceresponse partial_credit="points">
+  <choicegroup label="Which of the following countries has the largest population?" type="MultipleChoice">
+    <choice correct="partial" point_value="0.5">Brazil</choice>
+    <choice correct="false">Germany</choice>
+    <choice correct="true">Indonesia</choice>
+    <choice correct="false">Russia</choice>
+  </choicegroup>
+</multiplechoiceresponse>
+
+<solution>
+<div class="detailed-solution">
+<p>Explanation</p>
+
+<p>According to September 2014 estimates:</p>
+<p>The population of Indonesia is approximately 250 million.</p>
+<p>The population of Brazil  is approximately 200 million - half credit.</p>
+<p>The population of Russia is approximately 146 million.</p>
+<p>The population of Germany is approximately 81 million.</p>
+
+</div>
+</solution>
+
+</problem>

@@ -1,0 +1,25 @@
+<problem>
+
+<p>This Dropdown problem assigns full credit for any of a list of correct responses, and 50% credit for any of a list of partially correct responses.
+
+<p>Which of the following countries celebrates its independence on August 15?</p>
+
+<optionresponse>
+  <optioninput 
+    label="Which of the following countries celebrates its independence on August 15?" 
+    options="('China','India','Congo','Pakistan','Estonia','Duluth')" 
+    correct="India, Congo" 
+    partial="Pakistan, Estonia" >
+  </optioninput>
+</optionresponse>
+
+<solution>
+<div class="detailed-solution">
+<p>Explanation</p>
+
+<p> India became an independent nation on August 15, 1947. The Republic of the Congo became independent on August 15th, 1960. Partial credit for Pakistan (August 14th, 1947) and Estonia (August 20th, 1991). No credit for China, which has always been a soverign nation, or Duluth, which is not a country.</p>
+ 
+</div>
+</solution>
+
+</problem>
