@@ -1199,6 +1199,7 @@ class TrueFalseResponse(MultipleChoiceResponse):
 
 #-----------------------------------------------------------------------------
 
+
 @registry.register
 class OptionResponse(LoncapaResponse):
     """
@@ -1219,8 +1220,13 @@ class OptionResponse(LoncapaResponse):
         cmap = CorrectMap()
         
         amap = self.get_answers()
-        partial_map = self.get_partial()
         
+        tree = self.xml
+        problem_xml = tree.xpath('.')
+
+        # Partial credit type - can set 'points' only at the moment.
+        credit_type = problem_xml[0].get('partial_credit', default=False)
+
         for aid in amap:
             for word in amap[aid]:
                 if aid in student_answers and student_answers[aid] == word:
@@ -1230,14 +1236,18 @@ class OptionResponse(LoncapaResponse):
                     cmap.set(aid, 'incorrect')
                     
             # For partial credit:
-            if not cmap.is_correct(aid) and partial_map[aid] is not None: 
-                for word in partial_map[aid]:
-                    if aid in student_answers and student_answers[aid] == word:
-                        cmap.set(aid, 'partially-correct')
-                        cmap.set_property(aid, 'npoints', 0.5)
-                        break
-                    else:
-                        cmap.set(aid, 'incorrect')
+            if credit_type == 'points':
+                partial_map = self.get_partial()
+                partial_points = self.get_partial_points(partial_map)
+
+                if not cmap.is_correct(aid) and partial_map[aid] is not None: 
+                    for index, word in partial_map[aid]:
+                        if aid in student_answers and student_answers[aid] == word:
+                            cmap.set(aid, 'partially-correct')
+                            cmap.set_property(aid, 'npoints', partial_points[index])
+                            break
+                        else:
+                            cmap.set(aid, 'incorrect')
                         
             answer_variable = self.get_student_answer_variable_name(student_answers, aid)
             if answer_variable:
@@ -1265,8 +1275,25 @@ class OptionResponse(LoncapaResponse):
                 pmap[aid] = pmap[aid].split(',')
                 for index, word in enumerate(pmap[aid]):
                     pmap[aid][index] = word.strip()
-        # log.debug('%s: expected answers=%s' % (unicode(self),amap))
+        # log.debug('%s: partially correct answers=%s' % (unicode(self),amap))
         return pmap
+
+    def get_partial_points(self, partial_map):
+    
+        default_credit = 0.5
+        
+        pointsmap = dict([(af.get('id'), contextualize_text(af.get(
+            'point_values', default=None), self.context)) for af in self.answer_fields])
+
+        for aid in pointsmap:
+            if pointsmap[aid] is not None:
+                pointsmap[aid] = pointsmap[aid].split(',')
+                for index, word in enumerate(pointsmap[aid]):
+                    pointsmap[aid][index] = float(word.strip())
+            else:
+                pointsmap[aid] = [default_credit for x in partial_map]
+        # log.debug('%s: partial point values=%s' % (unicode(self),amap))
+        return pointsmap
 
     def get_student_answer_variable_name(self, student_answers, aid):
         """
@@ -1281,7 +1308,6 @@ class OptionResponse(LoncapaResponse):
         return None
 
 #-----------------------------------------------------------------------------
-
 
 @registry.register
 class NumericalResponse(LoncapaResponse):

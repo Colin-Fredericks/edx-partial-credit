@@ -1,15 +1,16 @@
 <problem>
 
-<p>This Dropdown problem assigns full credit for any of a list of correct responses, and 50% credit for any of a list of partially correct responses.
+<p>This Dropdown problem assigns full credit for any of a list of correct responses, and 50% credit for any of a list of partially correct responses. You can optionally specify a point_values="#, #, #, ..." attribute to assign points to each partially correct response.</p>
 
 <p>Which of the following countries celebrates its independence on August 15?</p>
 
-<optionresponse>
+<optionresponse partial_credit="points">
   <optioninput 
-    label="Which of the following countries celebrates its independence on August 15?" 
-    options="('China','India','Congo','Pakistan','Estonia','Duluth')" 
-    correct="India, Congo" 
-    partial="Pakistan, Estonia" >
+    label = "Which of the following countries celebrates its independence on August 15?" 
+    options = "('China','India','Congo','Pakistan','Estonia','Duluth')" 
+    correct = "India, Congo" 
+    partial = "Pakistan, Estonia" 
+    point_values = "0.5, 0.4" >
   </optioninput>
 </optionresponse>
 
