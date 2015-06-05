@@ -1238,13 +1238,13 @@ class OptionResponse(LoncapaResponse):
             # For partial credit:
             if credit_type == 'points':
                 partial_map = self.get_partial()
-                partial_points = self.get_partial_points(partial_map)
+                points_map = self.get_partial_points(partial_map)
 
                 if not cmap.is_correct(aid) and partial_map[aid] is not None: 
-                    for index, word in partial_map[aid]:
+                    for index, word in enumerate(partial_map[aid]):
                         if aid in student_answers and student_answers[aid] == word:
                             cmap.set(aid, 'partially-correct')
-                            cmap.set_property(aid, 'npoints', partial_points[index])
+                            cmap.set_property(aid, 'npoints', points_map[aid][index])
                             break
                         else:
                             cmap.set(aid, 'incorrect')
@@ -1291,7 +1291,7 @@ class OptionResponse(LoncapaResponse):
                 for index, word in enumerate(pointsmap[aid]):
                     pointsmap[aid][index] = float(word.strip())
             else:
-                pointsmap[aid] = [default_credit for x in partial_map]
+                pointsmap[aid] = [default_credit for x in partial_map[aid]]
         # log.debug('%s: partial point values=%s' % (unicode(self),amap))
         return pointsmap
 
