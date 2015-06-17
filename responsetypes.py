@@ -1962,7 +1962,7 @@ class CustomResponse(LoncapaResponse):
                     Returning any other truthy value for "ok" gives correct
                     """
 
-                    if ret['ok'] == False or ret["ok"].lower().strip() == "false":
+                    if ret['ok'] == False or str(ret["ok"]).lower().strip() == "false":
                         correct = 'incorrect'
                     elif 'partial' in str(ret['ok']).lower().strip():
                         correct = 'partially-correct'
@@ -2016,7 +2016,7 @@ class CustomResponse(LoncapaResponse):
                     Returning any other truthy value for "ok" gives correct
                     """
                     for input_dict in input_list:
-                        if input_dict['ok'] == False or input_dict['ok'].lower().strip() == "false":
+                        if input_dict['ok'] == False or str(input_dict['ok']).lower().strip() == "false":
                             correct.append('incorrect')
                         elif 'partial' in str(input_dict['ok']).lower().strip():
                             correct.append('partially-correct')
@@ -2057,7 +2057,7 @@ class CustomResponse(LoncapaResponse):
                 Returning any other truthy value for "ok" gives correct
                 """
                 
-                if ret == False or ret.lower().strip() == "false":
+                if ret == False or str(ret).lower().strip() == "false":
                     correct ='incorrect'
                 elif 'partial' in str(ret).lower().strip():
                     correct = 'partially-correct'
