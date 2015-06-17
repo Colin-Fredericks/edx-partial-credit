@@ -317,7 +317,7 @@ div.problem {
         background: url('../images/correct-icon.png') center center no-repeat;
       }
 
-      &.partially-correct {
+      &.partially-correct, &.ui-icon-notice {
         display: inline-block;
         position: relative;
         top: 6px;
