@@ -199,6 +199,19 @@ div.problem {
       }
     }
 
+    &.partially-correct, &.ui-icon-notice {
+      p.status {
+        display: inline-block;
+        width: 25px;
+        height: 20px;
+        background: url('../images/partially-correct-icon.png') center center no-repeat;
+      }
+
+      input {
+        border-color: yellow;
+      }
+    }
+
     &.processing {
       p.status {
         display: inline-block;
