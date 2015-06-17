@@ -788,10 +788,10 @@ class ChoiceResponse(LoncapaResponse):
             if halves_error_count == 0:
                 return_grade = self.get_max_score()
                 return CorrectMap(self.answer_id, correctness='correct', npoints=return_grade)
-            elif halves_error_count == 1:
+            elif halves_error_count == 1 and len(self.all_choices) > 2:
                 return_grade = round(self.get_max_score() / 2.0, 2)
                 return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
-            elif halves_error_count == 2:
+            elif halves_error_count == 2 and len(self.all_choices) > 4:
                 return_grade = round(self.get_max_score() / 4.0, 2)
                 return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
             else:
