@@ -1453,8 +1453,8 @@ class NumericalResponse(LoncapaResponse):
         
         # Allowing for multiple partial credit types. Divide on commas, strip whitespace.
         if credit_type:
-	        credit_type = credit_type.split(',')
-    	    credit_type = [word.strip().lower() for word in credit_type]
+            credit_type = credit_type.split(',')
+            credit_type = [word.strip().lower() for word in credit_type]
         
         # What multiple of the tolerance is worth partial credit?
         has_partial_range = tree.xpath('responseparam[@partial-range]')
