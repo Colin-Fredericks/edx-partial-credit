@@ -10,7 +10,7 @@ class CorrectMap(object):
     in a capa problem.  The response evaluation result for each answer_id includes
     (correctness, npoints, msg, hint, hintmode).
 
-    - correctness : either 'correct' or 'incorrect'
+    - correctness : 'correct', 'incorrect', or 'partially-correct'
     - npoints     : None, or integer specifying number of points awarded for this answer_id
     - msg         : string (may have HTML) giving extra message response
                     (displayed below textline or textbox)
