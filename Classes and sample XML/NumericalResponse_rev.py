@@ -116,26 +116,26 @@ class NumericalResponse(LoncapaResponse):
             raise general_exception
         # End `evaluator` block -- we figured out the student's answer!
 
-
         tree = self.xml
         problem_xml = tree.xpath('.')
-        
+
         # Partial credit type - can set 'close' or 'list'
         credit_type = problem_xml[0].get('partial_credit', default=False)
-        
+
         # Allowing for multiple partial credit types. Divide on commas, strip whitespace.
         if credit_type:
             credit_type = credit_type.split(',')
             credit_type = [word.strip().lower() for word in credit_type]
-        
+
         # What multiple of the tolerance is worth partial credit?
         has_partial_range = tree.xpath('responseparam[@partial-range]')
         if has_partial_range:
             partial_range = has_partial_range[0].get('partial-range', default='2')
-            partial_range = float(re.sub('\D', '', partial_range)) # Keep only digits in case people want to write 'x2' or '2x'
+            # Keep only digits in case people want to write 'x2' or '2x'
+            partial_range = float(re.sub(r'\D', '', partial_range))
         else:
             partial_range = 2
-        
+
         # Take in alternative answers that are worth partial credit.
         has_partial_answers = tree.xpath('responseparam[@partial_answers]')
         if has_partial_answers:
@@ -146,10 +146,8 @@ class NumericalResponse(LoncapaResponse):
 
         else:
             partial_answers = False
-        
+
         partial_score = 0.5
-        
-        cmap = CorrectMap(self.answer_id)
         is_correct = 'incorrect'
 
         if self.range_tolerance:
@@ -182,40 +180,37 @@ class NumericalResponse(LoncapaResponse):
                     if credit_type is False:
                         pass
                     elif 'close' in credit_type:
-                        """
-                        Partial credit: 50% if the student is outside the specified boundaries,
-                        but within an extended set of boundaries.
-                        """
+                        # Partial credit: 50% if the student is outside the specified boundaries,
+                        # but within an extended set of boundaries.
+
                         extended_boundaries = []
-                        boundary_range = boundaries[1]-boundaries[0]
+                        boundary_range = boundaries[1] - boundaries[0]
                         extended_boundaries.append(boundaries[0] - partial_range * boundary_range)
                         extended_boundaries.append(boundaries[1] + partial_range * boundary_range)
                         if extended_boundaries[0] < student_float < extended_boundaries[1]:
                             is_correct = 'partially-correct'
-                    
+
         else:
             correct_float = self.get_staff_ans(self.correct_answer)
-            
-            """
-            Partial credit is available in three cases:
-            - If the student answer is within expanded tolerance of the actual answer,
-              the student gets 50% credit. (Currently set as the default.)
-              Set via partial_credit="close" in the numericalresponse tag.
-              
-            - If the student answer is within regular tolerance of an alternative answer, 
-              the student gets 50% credit. (Same default.)
-              Set via partial_credit="list"
-              
-            - If the student answer is within expanded tolerance of an alternative answer,
-              the student gets 25%. (We take the 50% and square it, at the moment.)
-              Set via partial_credit="list,close" or "close, list" or the like.
-            """
-            
+
+            # Partial credit is available in three cases:
+            #  If the student answer is within expanded tolerance of the actual answer,
+            #  the student gets 50% credit. (Currently set as the default.)
+            #  Set via partial_credit="close" in the numericalresponse tag.
+            #
+            #  If the student answer is within regular tolerance of an alternative answer,
+            #  the student gets 50% credit. (Same default.)
+            #  Set via partial_credit="list"
+            #
+            #  If the student answer is within expanded tolerance of an alternative answer,
+            #  the student gets 25%. (We take the 50% and square it, at the moment.)
+            #  Set via partial_credit="list,close" or "close, list" or the like.
+
             if str(self.tolerance).endswith('%'):
                 expanded_tolerance = str(partial_range * float(str(self.tolerance)[:-1])) + '%'
             else:
                 expanded_tolerance = partial_range * float(self.tolerance)
-            
+
             if compare_with_tolerance(student_float, correct_float, self.tolerance):
                 is_correct = 'correct'
             elif credit_type is False:
@@ -231,12 +226,11 @@ class NumericalResponse(LoncapaResponse):
             elif 'close' in credit_type:
                 if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
                     is_correct = 'partially-correct'
-        
+
         if is_correct == 'partially-correct':
             return CorrectMap(self.answer_id, is_correct, npoints=partial_score)
         else:
             return CorrectMap(self.answer_id, is_correct)
-        
 
     def compare_answer(self, ans1, ans2):
         """

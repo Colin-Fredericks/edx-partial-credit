@@ -967,9 +967,11 @@ class MultipleChoiceResponse(LoncapaResponse):
                 and student_answers[self.answer_id] in self.correct_choices):
             return CorrectMap(self.answer_id, correctness='correct')
 
-        elif (credit_type == 'points'
+        elif (
+                credit_type == 'points'
                 and self.answer_id in student_answers
-                and student_answers[self.answer_id] in self.partial_choices):
+                and student_answers[self.answer_id] in self.partial_choices
+        ):
             choice_index = self.partial_choices.index(student_answers[self.answer_id])
             credit_amount = self.partial_values[choice_index]
             return CorrectMap(self.answer_id, correctness='partially-correct', npoints=credit_amount)
@@ -1326,7 +1328,7 @@ class OptionResponse(LoncapaResponse):
                 for index, word in enumerate(pointsmap[aid]):
                     pointsmap[aid][index] = float(word.strip())
             else:
-                pointsmap[aid] = [default_credit for x in partial_map[aid]]
+                pointsmap[aid] = [default_credit] * len(partial_map[aid])
         # log.debug('%s: partial point values=%s' % (unicode(self),amap))
         return pointsmap
 
@@ -1476,7 +1478,7 @@ class NumericalResponse(LoncapaResponse):
         if has_partial_range:
             partial_range = has_partial_range[0].get('partial-range', default='2')
             # Keep only digits in case people want to write 'x2' or '2x'
-            partial_range = float(re.sub('\D', '', partial_range))
+            partial_range = float(re.sub(r'\D', '', partial_range))
         else:
             partial_range = 2
 
@@ -1524,10 +1526,9 @@ class NumericalResponse(LoncapaResponse):
                     if credit_type is False:
                         pass
                     elif 'close' in credit_type:
-                        """
-                        Partial credit: 50% if the student is outside the specified boundaries,
-                        but within an extended set of boundaries.
-                        """
+                        # Partial credit: 50% if the student is outside the specified boundaries,
+                        # but within an extended set of boundaries.
+
                         extended_boundaries = []
                         boundary_range = boundaries[1] - boundaries[0]
                         extended_boundaries.append(boundaries[0] - partial_range * boundary_range)

@@ -18,7 +18,7 @@ class CustomResponse(LoncapaResponse):
                            'annotationinput', 'jsinput', 'formulaequationinput']
     code = None
     expect = None
-    
+
     # Standard amount for partial credit if not otherwise specified:
     default_pc = 0.5
 
@@ -246,13 +246,12 @@ class CustomResponse(LoncapaResponse):
                 # If there are multiple inputs, they all get marked
                 # to the same correct/incorrect value
                 if 'ok' in ret:
-                    """
-                    Returning any falsy value or the "false" string for "ok" gives incorrect.
-                    Returning any string that includes "partial" for "ok" gives partial credit.
-                    Returning any other truthy value for "ok" gives correct
-                    """
-                    
-                    ok_val = str(ret['ok']).lower().strip() if bool(ret['ok']) != False else 'false'
+
+                    # Returning any falsy value or the "false" string for "ok" gives incorrect.
+                    # Returning any string that includes "partial" for "ok" gives partial credit.
+                    # Returning any other truthy value for "ok" gives correct
+
+                    ok_val = str(ret['ok']).lower().strip() if bool(ret['ok']) else 'false'
 
                     if ok_val == 'false':
                         correct = 'incorrect'
@@ -260,11 +259,11 @@ class CustomResponse(LoncapaResponse):
                         correct = 'partially-correct'
                     else:
                         correct = 'correct'
-                    correct = [correct] * len(idset) # All inputs share the same mark.                    
-                    
+                    correct = [correct] * len(idset)   # All inputs share the same mark.
+
                     # old version, no partial credit:
                     # correct = ['correct' if ret['ok'] else 'incorrect'] * len(idset)
-                    
+
                     msg = ret.get('msg', None)
                     msg = self.clean_message_html(msg)
 
@@ -291,7 +290,11 @@ class CustomResponse(LoncapaResponse):
                 # the form:
                 # { 'overall_message': STRING,
                 #   'input_list': [
-                #     { 'ok': BOOLEAN or STRING, 'msg': STRING, 'grade_decimal' (optional): FLOAT (between 0.0 and 1.0)},
+                #     {
+                #         'ok': BOOLEAN or STRING,
+                #         'msg': STRING,
+                #         'grade_decimal' (optional): FLOAT (between 0.0 and 1.0)
+                #     },
                 #   ...
                 #   ]
                 # }
@@ -308,23 +311,23 @@ class CustomResponse(LoncapaResponse):
                     correct = []
                     messages = []
                     grade_decimals = []
-                    """
-                    Returning any falsy value or the "false" string for "ok" gives incorrect.
-                    Returning any string that includes "partial" for "ok" gives partial credit.
-                    Returning any other truthy value for "ok" gives correct
-                    """
+
+                    # Returning any falsy value or the "false" string for "ok" gives incorrect.
+                    # Returning any string that includes "partial" for "ok" gives partial credit.
+                    # Returning any other truthy value for "ok" gives correct
+
                     for input_dict in input_list:
-                        if input_dict['ok'] == False or str(input_dict['ok']).lower().strip() == "false":
+                        if str(input_dict['ok']).lower().strip() == "false" or not input_dict['ok']:
                             correct.append('incorrect')
                         elif 'partial' in str(input_dict['ok']).lower().strip():
                             correct.append('partially-correct')
                         else:
                             correct.append('correct')
-                            
-                        # old version, no partial credit 
+
+                        # old version, no partial credit
                         # correct.append('correct'
                         #                if input_dict['ok'] else 'incorrect')
-                        
+
                         msg = (self.clean_message_html(input_dict['msg'])
                                if 'msg' in input_dict else None)
                         messages.append(msg)
@@ -353,14 +356,13 @@ class CustomResponse(LoncapaResponse):
                     )
 
             else:
-                """
-                Returning any falsy value or the "false" string for "ok" gives incorrect.
-                Returning any string that includes "partial" for "ok" gives partial credit.
-                Returning any other truthy value for "ok" gives correct
-                """
-                
-                if ret == False or str(ret).lower().strip() == "false":
-                    correct ='incorrect'
+
+                # Returning any falsy value or the "false" string for "ok" gives incorrect.
+                # Returning any string that includes "partial" for "ok" gives partial credit.
+                # Returning any other truthy value for "ok" gives correct
+
+                if str(ret).lower().strip() == "false" or not bool(ret):
+                    correct = 'incorrect'
                 elif 'partial' in str(ret).lower().strip():
                     correct = 'partially-correct'
                 else:

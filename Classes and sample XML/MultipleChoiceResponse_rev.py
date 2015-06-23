@@ -26,6 +26,7 @@ class MultipleChoiceResponse(LoncapaResponse):
     max_inputfields = 1
     allowed_inputfields = ['choicegroup']
     correct_choices = None
+    has_responsive_ui = True
 
     def setup_response(self):
         # call secondary setup for MultipleChoice questions, to set name
@@ -37,7 +38,7 @@ class MultipleChoiceResponse(LoncapaResponse):
         cxml = xml.xpath('//*[@id=$id]//choice', id=xml.get('id'))
 
         # contextualize correct attribute and then select ones for which
-        # correct = "true", with separate list for those with partial credit point values.
+        # correct = "true"
         self.correct_choices = [
             contextualize_text(choice.get('name'), self.context)
             for choice in cxml
@@ -99,7 +100,7 @@ class MultipleChoiceResponse(LoncapaResponse):
         """
         # log.debug('%s: student_answers=%s, correct_choices=%s' % (
         #   unicode(self), student_answers, self.correct_choices))
-        
+
         tree = self.xml
         problem_xml = tree.xpath('.')
 
@@ -111,20 +112,23 @@ class MultipleChoiceResponse(LoncapaResponse):
         except ValueError:
             _ = self.capa_system.i18n.ugettext
             # Translators: 'partial_credit' is an attribute name and should not be translated.
+            # 'points' should also not be translated.
             msg = _("partial_credit value can only be set to 'points' or be removed.")
             raise LoncapaProblemError(msg)
-        
+
         if (self.answer_id in student_answers
                 and student_answers[self.answer_id] in self.correct_choices):
             return CorrectMap(self.answer_id, correctness='correct')
-            
-        elif (credit_type == 'points' 
+
+        elif (
+                credit_type == 'points'
                 and self.answer_id in student_answers
-                and student_answers[self.answer_id] in self.partial_choices):
+                and student_answers[self.answer_id] in self.partial_choices
+        ):
             choice_index = self.partial_choices.index(student_answers[self.answer_id])
             credit_amount = self.partial_values[choice_index]
             return CorrectMap(self.answer_id, correctness='partially-correct', npoints=credit_amount)
-            
+
         else:
             return CorrectMap(self.answer_id, 'incorrect')
 
