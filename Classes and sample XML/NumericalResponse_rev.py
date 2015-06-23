@@ -173,7 +173,7 @@ class NumericalResponse(LoncapaResponse):
                         tolerance=float_info.epsilon,
                         relative_tolerance=True
                 ):
-                    is_correct = inclusion
+                    is_correct = 'correct' if inclusion else 'incorrect'
                     break
             else:
                 if boundaries[0] < student_float < boundaries[1]:
@@ -233,9 +233,9 @@ class NumericalResponse(LoncapaResponse):
                     is_correct = 'partially-correct'
         
         if is_correct == 'partially-correct':
-            return CorrectMap(self.answer_id, correctness=is_correct, npoints=partial_score)
+            return CorrectMap(self.answer_id, is_correct, npoints=partial_score)
         else:
-            return CorrectMap(self.answer_id, correctness=is_correct)
+            return CorrectMap(self.answer_id, is_correct)
         
 
     def compare_answer(self, ans1, ans2):
