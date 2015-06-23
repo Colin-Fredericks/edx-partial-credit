@@ -137,18 +137,12 @@ class NumericalResponse(LoncapaResponse):
             partial_range = 2
         
         # Take in alternative answers that are worth partial credit.
-        has_partial_answers = tree.xpath('responseparam[@partial-answers]')
-        print "^^^^^^^"
-        print has_partial_answers
-        print "^^^^^^^"
+        has_partial_answers = tree.xpath('responseparam[@partial_answers]')
         if has_partial_answers:
-            partial_answers = has_partial_answers[0].get('partial-answers').split(',')
+            partial_answers = has_partial_answers[0].get('partial_answers').split(',')
             for index, word in enumerate(partial_answers):
                 partial_answers[index] = word.strip()
                 partial_answers[index] = self.get_staff_ans(partial_answers[index])
-                print "#######"
-                print partial_answers
-                print "#######"
 
         else:
             partial_answers = False
@@ -227,9 +221,6 @@ class NumericalResponse(LoncapaResponse):
             elif credit_type is False:
                 pass
             elif 'list' in credit_type:
-                print "%%%%%%%"
-                print partial_answers
-                print "%%%%%%%"
                 for value in partial_answers:
                     if compare_with_tolerance(student_float, value, self.tolerance):
                         is_correct = 'partially-correct'
