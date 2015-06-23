@@ -14,6 +14,7 @@ class NumericalResponse(LoncapaResponse):
     allowed_inputfields = ['textline', 'formulaequationinput']
     required_attributes = ['answer']
     max_inputfields = 1
+    has_responsive_ui = True
 
     def __init__(self, *args, **kwargs):
         self.correct_answer = ''
@@ -123,24 +124,32 @@ class NumericalResponse(LoncapaResponse):
         credit_type = problem_xml[0].get('partial_credit', default=False)
         
         # Allowing for multiple partial credit types. Divide on commas, strip whitespace.
-        credit_type = credit_type.split(',')
-        credit_type = [word.strip().lower() for word in credit_type]
+        if credit_type:
+            credit_type = credit_type.split(',')
+            credit_type = [word.strip().lower() for word in credit_type]
         
         # What multiple of the tolerance is worth partial credit?
-        has_partial_range = tree.xpath('responseparam[@partial_range]')
+        has_partial_range = tree.xpath('responseparam[@partial-range]')
         if has_partial_range:
-            partial_range = has_partial_range[0].get('partial_range', default='2')
+            partial_range = has_partial_range[0].get('partial-range', default='2')
             partial_range = float(re.sub('\D', '', partial_range)) # Keep only digits in case people want to write 'x2' or '2x'
         else:
             partial_range = 2
         
         # Take in alternative answers that are worth partial credit.
-        has_partial_answers = tree.xpath('responseparam[@partial_answers]')
+        has_partial_answers = tree.xpath('responseparam[@partial-answers]')
+        print "^^^^^^^"
+        print has_partial_answers
+        print "^^^^^^^"
         if has_partial_answers:
-            partial_answers = has_partial_answers[0].get('partial_answers').split(',')
+            partial_answers = has_partial_answers[0].get('partial-answers').split(',')
             for index, word in enumerate(partial_answers):
                 partial_answers[index] = word.strip()
                 partial_answers[index] = self.get_staff_ans(partial_answers[index])
+                print "#######"
+                print partial_answers
+                print "#######"
+
         else:
             partial_answers = False
         
@@ -176,7 +185,9 @@ class NumericalResponse(LoncapaResponse):
                 if boundaries[0] < student_float < boundaries[1]:
                     is_correct = 'correct'
                 else:
-                    if 'close' in credit_type:
+                    if credit_type is False:
+                        pass
+                    elif 'close' in credit_type:
                         """
                         Partial credit: 50% if the student is outside the specified boundaries,
                         but within an extended set of boundaries.
@@ -213,12 +224,17 @@ class NumericalResponse(LoncapaResponse):
             
             if compare_with_tolerance(student_float, correct_float, self.tolerance):
                 is_correct = 'correct'
+            elif credit_type is False:
+                pass
             elif 'list' in credit_type:
+                print "%%%%%%%"
+                print partial_answers
+                print "%%%%%%%"
                 for value in partial_answers:
                     if compare_with_tolerance(student_float, value, self.tolerance):
                         is_correct = 'partially-correct'
                     elif 'close' in credit_type:
-                        if compare_with_tolerance(student_float, value, expanded_tolerance):
+                        if compare_with_tolerance(student_float, value, self.tolerance):
                             is_correct = 'partially-correct'
                             partial_score = partial_score * partial_score
             elif 'close' in credit_type:

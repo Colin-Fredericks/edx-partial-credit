@@ -1466,11 +1466,18 @@ class NumericalResponse(LoncapaResponse):
         
         # Take in alternative answers that are worth partial credit.
         has_partial_answers = tree.xpath('responseparam[@partial-answers]')
+        print "^^^^^^^"
+        print has_partial_answers
+        print "^^^^^^^"
         if has_partial_answers:
             partial_answers = has_partial_answers[0].get('partial-answers').split(',')
             for index, word in enumerate(partial_answers):
                 partial_answers[index] = word.strip()
                 partial_answers[index] = self.get_staff_ans(partial_answers[index])
+                print "#######"
+                print partial_answers
+                print "#######"
+
         else:
             partial_answers = False
         
@@ -1548,6 +1555,9 @@ class NumericalResponse(LoncapaResponse):
             elif credit_type is False:
                 pass
             elif 'list' in credit_type:
+                print "%%%%%%%"
+                print partial_answers
+                print "%%%%%%%"
                 for value in partial_answers:
                     if compare_with_tolerance(student_float, value, self.tolerance):
                         is_correct = 'partially-correct'
@@ -1988,14 +1998,17 @@ class CustomResponse(LoncapaResponse):
                     Returning any string that includes "partial" for "ok" gives partial credit.
                     Returning any other truthy value for "ok" gives correct
                     """
+                    
+                    ok_val = str(ret['ok']).lower().strip() if bool(ret['ok']) != False else 'false'
 
-                    if bool(ret['ok']) == False or str(ret["ok"]).lower().strip() == "false":
+                    if ok_val == 'false':
                         correct = 'incorrect'
-                    elif 'partial' in str(ret['ok']).lower().strip():
+                    elif 'partial' in ok_val:
                         correct = 'partially-correct'
                     else:
                         correct = 'correct'
-                    correct = [correct] * len(idset) # All inputs share the same mark.
+                    correct = [correct] * len(idset) # All inputs share the same mark.                    
+                    
                     # old version, no partial credit:
                     # correct = ['correct' if ret['ok'] else 'incorrect'] * len(idset)
                     
@@ -2012,8 +2025,12 @@ class CustomResponse(LoncapaResponse):
                     if 'grade_decimal' in ret:
                         decimal = float(ret['grade_decimal'])
                     else:
-                        decimal = 1.0 if correct[0] == 'correct' else 0.0
-                        decimal = self.default_pc if correct[0] == 'partially_correct' else 0.0
+                        if correct[0] == 'correct':
+                            decimal = 1.0
+                        elif correct[0] == 'partially_correct':
+                            decimal = self.default_pc
+                        else:
+                            decimal = 0.0
                     grade_decimals = [decimal] * len(idset)
                     self.context['grade_decimals'] = grade_decimals
 
@@ -2061,8 +2078,12 @@ class CustomResponse(LoncapaResponse):
                         if 'grade_decimal' in input_dict:
                             decimal = input_dict['grade_decimal']
                         else:
-                            decimal = 1.0 if input_dict['ok'] else 0.0
-                            decimal = self.default_pc if 'partial' in str(input_dict['ok']).lower().strip() else 0.0
+                            if input_dict['ok']:
+                                decimal = 1.0
+                            elif 'partial' in str(input_dict['ok']).lower().strip():
+                                decimal = self.default_pc
+                            else:
+                                decimal = 0.0
                         grade_decimals.append(decimal)
 
                     self.context['messages'] = messages

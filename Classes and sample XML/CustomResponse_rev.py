@@ -251,16 +251,20 @@ class CustomResponse(LoncapaResponse):
                     Returning any string that includes "partial" for "ok" gives partial credit.
                     Returning any other truthy value for "ok" gives correct
                     """
+                    
+                    ok_val = str(ret['ok']).lower().strip() if bool(ret['ok']) != False else 'false'
 
-                    if ret['ok'] == False or ret['ok'].lower().strip() == 'false':
+                    if ok_val == 'false':
                         correct = 'incorrect'
-                    elif 'partial' in str(ret['ok']).lower().strip():
+                    elif 'partial' in ok_val:
                         correct = 'partially-correct'
                     else:
                         correct = 'correct'
-                    correct = [correct] * len(idset)
+                    correct = [correct] * len(idset) # All inputs share the same mark.                    
+                    
                     # old version, no partial credit:
                     # correct = ['correct' if ret['ok'] else 'incorrect'] * len(idset)
+                    
                     msg = ret.get('msg', None)
                     msg = self.clean_message_html(msg)
 
@@ -274,8 +278,12 @@ class CustomResponse(LoncapaResponse):
                     if 'grade_decimal' in ret:
                         decimal = float(ret['grade_decimal'])
                     else:
-                        decimal = 1.0 if ret['ok'] else 0.0
-                        decimal = self.default_pc if 'partial' in str(ret['ok']).lower().strip() else 0.0
+                        if correct[0] == 'correct':
+                            decimal = 1.0
+                        elif correct[0] == 'partially_correct':
+                            decimal = self.default_pc
+                        else:
+                            decimal = 0.0
                     grade_decimals = [decimal] * len(idset)
                     self.context['grade_decimals'] = grade_decimals
 
@@ -306,7 +314,7 @@ class CustomResponse(LoncapaResponse):
                     Returning any other truthy value for "ok" gives correct
                     """
                     for input_dict in input_list:
-                        if input_dict['ok'] == False or input_dict['ok'].lower().strip() == "false":
+                        if input_dict['ok'] == False or str(input_dict['ok']).lower().strip() == "false":
                             correct.append('incorrect')
                         elif 'partial' in str(input_dict['ok']).lower().strip():
                             correct.append('partially-correct')
@@ -323,8 +331,12 @@ class CustomResponse(LoncapaResponse):
                         if 'grade_decimal' in input_dict:
                             decimal = input_dict['grade_decimal']
                         else:
-                            decimal = 1.0 if input_dict['ok'] else 0.0
-                            decimal = self.default_pc if 'partial' in str(input_dict['ok']).lower().strip() else 0.0
+                            if input_dict['ok']:
+                                decimal = 1.0
+                            elif 'partial' in str(input_dict['ok']).lower().strip():
+                                decimal = self.default_pc
+                            else:
+                                decimal = 0.0
                         grade_decimals.append(decimal)
 
                     self.context['messages'] = messages
@@ -346,8 +358,8 @@ class CustomResponse(LoncapaResponse):
                 Returning any string that includes "partial" for "ok" gives partial credit.
                 Returning any other truthy value for "ok" gives correct
                 """
-                                
-                if ret == False or ret.lower().strip() == 'false':
+                
+                if ret == False or str(ret).lower().strip() == "false":
                     correct ='incorrect'
                 elif 'partial' in str(ret).lower().strip():
                     correct = 'partially-correct'
