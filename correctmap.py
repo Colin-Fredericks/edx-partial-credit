@@ -102,10 +102,8 @@ class CorrectMap(object):
 
     def is_correct(self, answer_id):
         """
-        Arguments:
-            answer_id: an answer id
-        Returns:
-            bool: true if the problem is correct OR partially correct.
+        Takes an answer_id
+        Returns true if the problem is correct OR partially correct.
         """
         if answer_id in self.cmap:
             return self.cmap[answer_id]['correctness'] in ['correct', 'partially-correct']
@@ -113,10 +111,8 @@ class CorrectMap(object):
 
     def is_partially_correct(self, answer_id):
         """
-        Arguments:
-            answer_id: an answer id
-        Returns:
-            bool: true if the problem is partially correct.
+        Takes an answer_id
+        Returns true if the problem is partially correct.
         """
         if answer_id in self.cmap:
             return self.cmap[answer_id]['correctness'] in ['partially-correct']
