@@ -261,7 +261,6 @@ class LoncapaResponse(object):
         new_cmap = self.get_score(student_answers)
         self.get_hints(convert_files_to_filenames(
             student_answers), new_cmap, old_cmap)
-        # log.debug('new_cmap = %s' % new_cmap)
         return new_cmap
 
     def make_hint_div(self, hint_node, correct, student_answer, question_tag,
@@ -1100,6 +1099,14 @@ class MultipleChoiceResponse(LoncapaResponse):
     has_responsive_ui = True
 
     def setup_response(self):
+        """
+        Collects information from the XML for later use.
+        
+        correct_choices is a list of the correct choices.
+        partial_choices is a list of the partially-correct choices.
+        partial_values is a list of the scores that go with those
+          choices, defaulting to 0.5 if no value is specified.
+        """
         # call secondary setup for MultipleChoice questions, to set name
         # attributes
         self.mc_setup_response()
@@ -1118,12 +1125,12 @@ class MultipleChoiceResponse(LoncapaResponse):
         self.partial_choices = [
             contextualize_text(choice.get('name'), self.context)
             for choice in cxml
-            if contextualize_text(choice.get('correct'), self.context) == 'partial'
+            if contextualize_text(choice.get('correct'), self.context).lower() == 'partial'
         ]
         self.partial_values = [
             float(choice.get('point_value', default='0.5'))    # Default partial credit: 50%
             for choice in cxml
-            if contextualize_text(choice.get('correct'), self.context) == 'partial'
+            if contextualize_text(choice.get('correct'), self.context).lower() == 'partial'
         ]
 
     def get_extended_hints(self, student_answer_dict, new_cmap):
@@ -1199,8 +1206,6 @@ class MultipleChoiceResponse(LoncapaResponse):
         """
         grade student response.
         """
-        # log.debug('%s: student_answers=%s, correct_choices=%s' % (
-        #   unicode(self), student_answers, self.correct_choices))
 
         tree = self.xml
         problem_xml = tree.xpath('.')
@@ -1555,7 +1560,6 @@ class OptionResponse(LoncapaResponse):
             for index, word in enumerate(answer_map[aid]):
                 answer_map[aid][index] = word.strip()
 
-        # log.debug('%s: expected answers=%s' % (unicode(self),answer_map))
         return answer_map
 
     def get_partial(self):
@@ -1574,7 +1578,6 @@ class OptionResponse(LoncapaResponse):
                 for index, word in enumerate(partial_map[aid]):
                     partial_map[aid][index] = word.strip()
 
-        # log.debug('%s: partially correct answers=%s' % (unicode(self),answer_map))
         return partial_map
 
     def get_partial_points(self, partial_map):
@@ -1598,7 +1601,7 @@ class OptionResponse(LoncapaResponse):
                     points_map[aid][index] = float(word.strip())
             else:
                 points_map[aid] = [default_credit] * len(partial_map[aid])
-        # log.debug('%s: partial point values=%s' % (unicode(self),answer_map))
+
         return points_map
 
     def get_student_answer_variable_name(self, student_answers, aid):
@@ -1772,9 +1775,7 @@ class NumericalResponse(LoncapaResponse):
         # What multiple of the tolerance is worth partial credit?
         has_partial_range = tree.xpath('responseparam[@partial-range]')
         if has_partial_range:
-            partial_range = has_partial_range[0].get('partial-range', default='2')
-            # Keep only digits in case people want to write 'x2' or '2x'
-            partial_range = float(re.sub(r'\D', '', partial_range))
+            partial_range = float(has_partial_range[0].get('partial-range', default='2'))
         else:
             partial_range = 2
 
