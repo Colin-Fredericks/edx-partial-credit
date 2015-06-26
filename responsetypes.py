@@ -890,7 +890,11 @@ class ChoiceResponse(LoncapaResponse):
         else:
             return CorrectMap(self.answer_id, 'incorrect')
 
-    def grade_without_partial_credit():
+    def grade_without_partial_credit(self, student_answer):
+        """
+        Standard grading for checkbox problems.
+        100% credit if all choices are correct; 0% otherwise
+        """
         required_selected = len(self.correct_choices - student_answer) == 0
         no_extra_selected = len(student_answer - self.correct_choices) == 0
 
@@ -900,7 +904,6 @@ class ChoiceResponse(LoncapaResponse):
             return CorrectMap(self.answer_id, 'correct')
         else:
             return CorrectMap(self.answer_id, 'incorrect')
-
 
     def get_score(self, student_answers):
 
@@ -954,7 +957,7 @@ class ChoiceResponse(LoncapaResponse):
         elif credit_type == 'edc':
             return self.grade_via_every_decision_counts(all_choices, student_answer, student_non_answers)
         else:
-            return grade_without_partial_credit(student_answer)
+            return self.grade_without_partial_credit(student_answer)
 
     def get_answers(self):
         return {self.answer_id: list(self.correct_choices)}
@@ -1605,6 +1608,49 @@ class OptionResponse(LoncapaResponse):
                 points_map[aid] = [default_credit] * len(partial_map[aid])
 
         return points_map
+
+    def get_problem_map(self, option):
+        """
+        This can return one of three different dictionaries:
+        option = "answers"
+            A dictionary with problem ids as keys.
+            Each entry is a list of the correct answers for that id.
+        option = "partial"
+            Each entry is a list of the correct answers for that id.
+        option = "points"
+            Matches the "partial" one, but gives point values instead.
+            Defaults to 50% credit.
+        """
+
+        default_credit = 0.5
+
+        if option == 'answers':
+            target = 'correct'
+        elif option == 'partial':
+            target = 'partial'
+        elif option == 'points':
+            target = 'point_values'
+
+        the_map = dict([
+            (af.get('id'), contextualize_text(
+                af.get(target, default = None),
+                self.context
+            ))
+            for af in self.answer_fields
+        ])
+
+        for answer_id in the_map:
+            if the_map[answer_id] is not None:
+                # Split on commas and strip whitespace 
+                # to allow for multiple options.
+                the_map[answer_id] = the_map[answer_id].split(',')
+                for index, word in enumerate(the_map[answer_id]):
+                    the_map[answer_id][index] = float(word.strip())
+            # If we find nothing and we're looking for points, return the default.
+            elif target == 'points':
+                the_map[answer_id] = [default_credit] * len(get_problem_map('partial')[answer_id])
+
+        return the_map
 
     def get_student_answer_variable_name(self, student_answers, aid):
         """
