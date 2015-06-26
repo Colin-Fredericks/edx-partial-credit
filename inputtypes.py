@@ -85,7 +85,7 @@ class Status(object):
         names = {
             'correct': _('correct'),
             'incorrect': _('incorrect'),
-            'partially-correct': _('partially-correct'),
+            'partially-correct': _('partially correct'),
             'incomplete': _('incomplete'),
             'unanswered': _('unanswered'),
             'unsubmitted': _('unanswered'),
