@@ -1503,7 +1503,8 @@ class OptionResponse(LoncapaResponse):
     def get_score(self, student_answers):
         cmap = CorrectMap()
 
-        answer_map = self.get_answers()
+        problem_map = self.get_problem_attributes()
+        answer_map = problem_map['correct']
 
         tree = self.xml
         problem_xml = tree.xpath('.')
@@ -1530,8 +1531,8 @@ class OptionResponse(LoncapaResponse):
 
             # For partial credit:
             if credit_type == 'points':
-                partial_map = self.get_partial()
-                points_map = self.get_partial_points(partial_map)
+                partial_map = problem_map['partial']
+                points_map = problem_map['point_values']
 
                 if not cmap.is_correct(aid) and partial_map[aid] is not None:
                     for index, word in enumerate(partial_map[aid]):
@@ -1550,107 +1551,61 @@ class OptionResponse(LoncapaResponse):
 
         return cmap
 
-    def get_answers(self):
+    def get_problem_attributes(self):
         """
-        Returns a dictionary with problem ids as keys.
-        Each entry is a list of the correct answers for that id.
-        """
-        answer_map = dict([(af.get('id'), contextualize_text(af.get(
-            'correct'), self.context)) for af in self.answer_fields])
-
-        # Get the list of correct answers.
-        # Split to allow multiple correct answers and trim whitespace.
-        for aid in answer_map:
-            answer_map[aid] = answer_map[aid].split(',')
-            for index, word in enumerate(answer_map[aid]):
-                answer_map[aid][index] = word.strip()
-
-        return answer_map
-
-    def get_partial(self):
-        """
-        Returns a dictionary similar to the answer map,
-        but with all the partially-correct answers instead.
-        """
-        partial_map = dict([(af.get('id'), contextualize_text(af.get(
-            'partial'), self.context)) for af in self.answer_fields])
-
-        # Get the list of partially-correct answers.
-        # Split to allow multiple options and trim whitespace.
-        for aid in partial_map:
-            if partial_map[aid] is not None:
-                partial_map[aid] = partial_map[aid].split(',')
-                for index, word in enumerate(partial_map[aid]):
-                    partial_map[aid][index] = word.strip()
-
-        return partial_map
-
-    def get_partial_points(self, partial_map):
-        """
-        This dictionary matches the one returned by get_partial,
-        but gives the point value for the responses instead.
-        The default is 50% credit.
-        """
-
-        default_credit = 0.5
-
-        points_map = dict([(af.get('id'), contextualize_text(af.get(
-            'point_values', default=None), self.context)) for af in self.answer_fields])
-
-        # Get the partial credit for each partially-correct option.
-        # Split to allow multiple options and trim whitespace.
-        for aid in points_map:
-            if points_map[aid] is not None:
-                points_map[aid] = points_map[aid].split(',')
-                for index, word in enumerate(points_map[aid]):
-                    points_map[aid][index] = float(word.strip())
-            else:
-                points_map[aid] = [default_credit] * len(partial_map[aid])
-
-        return points_map
-
-    def get_problem_map(self, option):
-        """
-        This can return one of three different dictionaries:
-        option = "answers"
+        This returns a dict built of of three smaller dictionaries.
+        Keys are:
+        "correct":
             A dictionary with problem ids as keys.
-            Each entry is a list of the correct answers for that id.
-        option = "partial"
-            Each entry is a list of the correct answers for that id.
-        option = "points"
+            Entries are lists of the correct answers for that id.
+        "partial":
+            A dictionary with problem ids as keys.
+            Entries are lists of the partially-correct answers for that id.
+        "point_values":
             Matches the "partial" one, but gives point values instead.
             Defaults to 50% credit.
         """
 
         default_credit = 0.5
 
-        if option == 'answers':
-            target = 'correct'
-        elif option == 'partial':
-            target = 'partial'
-        elif option == 'points':
-            target = 'point_values'
+        problem_map = dict()
 
-        the_map = dict([
-            (af.get('id'), contextualize_text(
-                af.get(target, default = None),
-                self.context
-            ))
-            for af in self.answer_fields
-        ])
+        for target in ['correct', 'partial', 'point_values']:
 
-        for answer_id in the_map:
-            if the_map[answer_id] is not None:
-                # Split on commas and strip whitespace 
-                # to allow for multiple options.
-                the_map[answer_id] = the_map[answer_id].split(',')
-                for index, word in enumerate(the_map[answer_id]):
-                    the_map[answer_id][index] = float(word.strip())
-            # If we find nothing and we're looking for points, return the default.
-            elif target == 'points':
-                the_map[answer_id] = [default_credit] * len(get_problem_map('partial')[answer_id])
+            small_map = dict([
+                (af.get('id'), contextualize_text(
+                    af.get(target, default = None),
+                    self.context
+                ))
+                for af in self.answer_fields
+            ])
 
-        return the_map
+            for answer_id in small_map:
+                if small_map[answer_id] is not None:
+                    # Split on commas and strip whitespace 
+                    # to allow for multiple options.
+                    small_map[answer_id] = small_map[answer_id].split(',')
+                    for index, word in enumerate(small_map[answer_id]):
+                        # Pick out whether we're getting numbers or strings.
+                        if target in ['point_values']:
+                            small_map[answer_id][index] = float(word.strip())
+                        else:
+                            small_map[answer_id][index] = str(word.strip())
+                # If we find nothing and we're looking for points, return the default.
+                elif target == 'points':
+                    small_map[answer_id] = [default_credit] * len(get_problem_attributes('partial')[answer_id])
+
+            # Add a copy of the in-loop map to the big map.
+            problem_map[target] = dict(small_map)
+
+        return problem_map
+
+    def get_answers(self):
+        """
+        Returns a dictionary with problem ids as keys.
+        Each entry is a list of the correct answers for that id.
+        """
+        return self.get_problem_attributes()['correct']
 
     def get_student_answer_variable_name(self, student_answers, aid):
         """
