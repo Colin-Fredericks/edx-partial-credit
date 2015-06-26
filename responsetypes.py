@@ -840,9 +840,9 @@ class ChoiceResponse(LoncapaResponse):
             if not choice.get('id'):
                 choice.set("id", chr(ord("A") + index))
 
-    def grade_via_edc(self, all_choices, student_answer, student_non_answers):
+    def grade_via_every_decision_counts(self, all_choices, student_answer, student_non_answers):
         """
-        Calculates partial credit on the EDC scheme.
+        Calculates partial credit on the Every Decision Counts scheme.
         For each correctly selected or correctly blank choice, score 1 point.
         Divide by total number of choices.
         Returns a CorrectMap.
@@ -890,6 +890,18 @@ class ChoiceResponse(LoncapaResponse):
         else:
             return CorrectMap(self.answer_id, 'incorrect')
 
+    def grade_without_partial_credit():
+        required_selected = len(self.correct_choices - student_answer) == 0
+        no_extra_selected = len(student_answer - self.correct_choices) == 0
+
+        correct = required_selected & no_extra_selected
+
+        if correct:
+            return CorrectMap(self.answer_id, 'correct')
+        else:
+            return CorrectMap(self.answer_id, 'incorrect')
+
+
     def get_score(self, student_answers):
 
         # Setting up answer lists:
@@ -907,7 +919,7 @@ class ChoiceResponse(LoncapaResponse):
             student_answer = [student_answer]
 
         # "None apply" should really be a valid choice for "check all that apply",
-        # but it throws an error if all the checks are blank.
+        # but score feedback is broken when no boxes are marked.
         no_empty_answer = student_answer != []
 
         student_answer = set(student_answer)
@@ -937,22 +949,12 @@ class ChoiceResponse(LoncapaResponse):
             msg = _("partial_credit value should be one of 'EDC', 'halves', or 'false'.")
             raise LoncapaProblemError(msg)
 
-        if credit_type == 'false':
-            pass
-        elif credit_type == 'halves':
+        if credit_type == 'halves':
             return self.grade_via_halves(all_choices, student_answer, student_non_answers)
         elif credit_type == 'edc':
-            return self.grade_via_edc(all_choices, student_answer, student_non_answers)
-
-        required_selected = len(self.correct_choices - student_answer) == 0
-        no_extra_selected = len(student_answer - self.correct_choices) == 0
-
-        correct = required_selected & no_extra_selected & no_empty_answer
-
-        if correct:
-            return CorrectMap(self.answer_id, 'correct')
+            return self.grade_via_every_decision_counts(all_choices, student_answer, student_non_answers)
         else:
-            return CorrectMap(self.answer_id, 'incorrect')
+            return grade_without_partial_credit(student_answer)
 
     def get_answers(self):
         return {self.answer_id: list(self.correct_choices)}
@@ -1101,7 +1103,7 @@ class MultipleChoiceResponse(LoncapaResponse):
     def setup_response(self):
         """
         Collects information from the XML for later use.
-        
+
         correct_choices is a list of the correct choices.
         partial_choices is a list of the partially-correct choices.
         partial_values is a list of the scores that go with those
