@@ -213,6 +213,18 @@ class LoncapaResponse(object):
                 self.default_answer_map[entry.get(
                     'id')] = contextualize_text(answer, self.context)
 
+        # Does this problem have partial credit?
+        # If so, what kind? Get it as a list of strings.
+        self.credit_type = xml.xpath('.')[0].get('partial_credit', default=False)
+        if self.credit_type == 'false':
+            self.credit_type = False
+        if self.credit_type:
+            self.has_partial_credit = True
+            self.credit_type = self.credit_type.split(',')
+            self.credit_type = [word.strip().lower() for word in self.credit_type]
+        else:
+            self.has_partial_credit = False
+
         if hasattr(self, 'setup_response'):
             self.setup_response()
 
@@ -890,7 +902,7 @@ class ChoiceResponse(LoncapaResponse):
         else:
             return CorrectMap(self.answer_id, 'incorrect')
 
-    def grade_without_partial_credit(self, student_answer):
+    def grade_without_partial_credit(self, all_choices, student_answer, student_non_answers):
         """
         Standard grading for checkbox problems.
         100% credit if all choices are correct; 0% otherwise
@@ -921,43 +933,44 @@ class ChoiceResponse(LoncapaResponse):
         if not isinstance(student_answer, list):
             student_answer = [student_answer]
 
-        # "None apply" should really be a valid choice for "check all that apply",
-        # but score feedback is broken when no boxes are marked.
-        no_empty_answer = student_answer != []
-
         student_answer = set(student_answer)
 
         student_non_answers = all_choices - student_answer
 
+        # "None apply" should really be a valid choice for "check all that apply",
+        # but score feedback is broken when no boxes are marked.
+        no_empty_answer = student_answer != []
+
         if not no_empty_answer:
             return CorrectMap(self.answer_id, 'incorrect')
+
+        # No partial credit? Get grade right now.
+        if not self.has_partial_credit:
+            return self.grade_without_partial_credit(all_choices, student_answer, student_non_answers)
 
         # This below checks to see whether we're using an alternate grading scheme.
         #  Set partial_credit="false" (or remove it) to require an exact answer for any credit.
         #  Set partial_credit="EDC" to count each choice for equal points (Every Decision Counts).
         #  Set partial_credit="halves" to take half credit off for each error.
 
-        tree = self.xml
-        problem_xml = tree.xpath('.')
+        # Translators: 'partial_credit' and the items in the 'graders' object
+        # are attribute names or values and should not be translated.
+        graders = {
+            'edc': self.grade_via_every_decision_counts,
+            'halves': self.grade_via_halves,
+            'false': self.grade_without_partial_credit
+        }
 
-        # Partial credit type - only one type at a time right now.
-        credit_type = problem_xml[0].get('partial_credit', default=False)
+        # Only one type of credit at a time.
+        if len(self.credit_type) > 1:
+            raise 'Only one type of partial credit is allowed for Checkbox problems.'
 
-        try:
-            credit_type = str(credit_type).lower().strip()
-        except ValueError:
-            _ = self.capa_system.i18n.ugettext
-            # Translators: 'partial_credit' is an attribute name and should not be translated.
-            # 'EDC' and 'halves' and 'false' should also not be translated.
-            msg = _("partial_credit value should be one of 'EDC', 'halves', or 'false'.")
-            raise LoncapaProblemError(msg)
+        # Make sure we're using an approved style.
+        if self.credit_type[0] not in graders:
+            raise 'partial_credit attribute should be one of: ', ','.join(graders)
 
-        if credit_type == 'halves':
-            return self.grade_via_halves(all_choices, student_answer, student_non_answers)
-        elif credit_type == 'edc':
-            return self.grade_via_every_decision_counts(all_choices, student_answer, student_non_answers)
-        else:
-            return self.grade_without_partial_credit(student_answer)
+        # Run the appropriate grader.
+        return graders[self.credit_type[0]](all_choices, student_answer, student_non_answers)
 
     def get_answers(self):
         return {self.answer_id: list(self.correct_choices)}
@@ -1574,7 +1587,7 @@ class OptionResponse(LoncapaResponse):
 
             small_map = dict([
                 (af.get('id'), contextualize_text(
-                    af.get(target, default = None),
+                    af.get(target, default=None),
                     self.context
                 ))
                 for af in self.answer_fields
@@ -1582,7 +1595,7 @@ class OptionResponse(LoncapaResponse):
 
             for answer_id in small_map:
                 if small_map[answer_id] is not None:
-                    # Split on commas and strip whitespace 
+                    # Split on commas and strip whitespace
                     # to allow for multiple options.
                     small_map[answer_id] = small_map[answer_id].split(',')
                     for index, word in enumerate(small_map[answer_id]):
