@@ -215,15 +215,15 @@ class LoncapaResponse(object):
 
         # Does this problem have partial credit?
         # If so, what kind? Get it as a list of strings.
-        self.credit_type = xml.xpath('.')[0].get('partial_credit', default=False)
-        if self.credit_type == 'false':
-            self.credit_type = False
-        if self.credit_type:
-            self.has_partial_credit = True
-            self.credit_type = self.credit_type.split(',')
-            self.credit_type = [word.strip().lower() for word in self.credit_type]
-        else:
+        partial_credit = xml.xpath('.')[0].get('partial_credit', default=False)
+
+        if str(partial_credit).lower().strip() == 'false':
             self.has_partial_credit = False
+            self.credit_type = []
+        else:
+            self.has_partial_credit = True
+            self.credit_type = str(self.credit_type).split(',')
+            self.credit_type = [word.strip().lower() for word in self.credit_type]
 
         if hasattr(self, 'setup_response'):
             self.setup_response()
@@ -852,13 +852,18 @@ class ChoiceResponse(LoncapaResponse):
             if not choice.get('id'):
                 choice.set("id", chr(ord("A") + index))
 
-    def grade_via_every_decision_counts(self, all_choices, student_answer, student_non_answers):
+    def grade_via_every_decision_counts(self, **kwargs):
         """
         Calculates partial credit on the Every Decision Counts scheme.
         For each correctly selected or correctly blank choice, score 1 point.
         Divide by total number of choices.
+        Arguments: all_choices, student_answer, student_non_answers
         Returns a CorrectMap.
         """
+
+        all_choices = kwargs['all_choices']
+        student_answer = kwargs['student_answer']
+        student_non_answers = kwargs['student_non_answers']
 
         edc_max_grade = len(all_choices)
         edc_current_grade = 0
@@ -874,15 +879,20 @@ class ChoiceResponse(LoncapaResponse):
         else:
             return CorrectMap(self.answer_id, correctness='incorrect', npoints=0)
 
-    def grade_via_halves(self, all_choices, student_answer, student_non_answers):
+    def grade_via_halves(self, **kwargs):
         """
         Calculates partial credit on the Halves scheme.
         If no errors, full credit.
         If one error, half credit as long as there are 3+ choices
         If two errors, 1/4 credit as long as there are 5+ choices
         (If not enough choices, no credit.)
+        Arguments: all_choices, student_answer, student_non_answers
         Returns a CorrectMap
         """
+
+        all_choices = kwargs['all_choices']
+        student_answer = kwargs['student_answer']
+        student_non_answers = kwargs['student_non_answers']
 
         halves_error_count = 0
 
@@ -902,11 +912,14 @@ class ChoiceResponse(LoncapaResponse):
         else:
             return CorrectMap(self.answer_id, 'incorrect')
 
-    def grade_without_partial_credit(self, all_choices, student_answer, student_non_answers):
+    def grade_without_partial_credit(self, **kwargs):
         """
         Standard grading for checkbox problems.
         100% credit if all choices are correct; 0% otherwise
+        Arguments: student_answer
         """
+        student_answer = kwargs['student_answer']
+
         required_selected = len(self.correct_choices - student_answer) == 0
         no_extra_selected = len(student_answer - self.correct_choices) == 0
 
@@ -946,7 +959,7 @@ class ChoiceResponse(LoncapaResponse):
 
         # No partial credit? Get grade right now.
         if not self.has_partial_credit:
-            return self.grade_without_partial_credit(all_choices, student_answer, student_non_answers)
+            return self.grade_without_partial_credit(student_answer=student_answer)
 
         # This below checks to see whether we're using an alternate grading scheme.
         #  Set partial_credit="false" (or remove it) to require an exact answer for any credit.
@@ -970,7 +983,11 @@ class ChoiceResponse(LoncapaResponse):
             raise 'partial_credit attribute should be one of: ', ','.join(graders)
 
         # Run the appropriate grader.
-        return graders[self.credit_type[0]](all_choices, student_answer, student_non_answers)
+        return graders[self.credit_type[0]](
+            all_choices=all_choices,
+            student_answer=student_answer,
+            student_non_answers=student_non_answers
+        )
 
     def get_answers(self):
         return {self.answer_id: list(self.correct_choices)}
@@ -1606,7 +1623,8 @@ class OptionResponse(LoncapaResponse):
                             small_map[answer_id][index] = str(word.strip())
                 # If we find nothing and we're looking for points, return the default.
                 elif target == 'points':
-                    small_map[answer_id] = [default_credit] * len(get_problem_attributes('partial')[answer_id])
+                    num_partial = len(self.get_problem_attributes()['partial'][answer_id])
+                    small_map[answer_id] = [default_credit] * num_partial
 
             # Add a copy of the in-loop map to the big map.
             problem_map[target] = dict(small_map)
