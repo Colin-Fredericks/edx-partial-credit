@@ -952,9 +952,9 @@ class ChoiceResponse(LoncapaResponse):
 
         # "None apply" should really be a valid choice for "check all that apply",
         # but score feedback is broken when no boxes are marked.
-        no_empty_answer = student_answer != []
+        empty_answer = student_answer == []
 
-        if not no_empty_answer:
+        if empty_answer:
             return CorrectMap(self.answer_id, 'incorrect')
 
         # No partial credit? Get grade right now.
