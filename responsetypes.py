@@ -1162,7 +1162,7 @@ class MultipleChoiceResponse(LoncapaResponse):
             for choice in cxml
             if contextualize_text(choice.get('correct'), self.context).upper() == "TRUE"
         ]
-        
+
         if self.has_partial_credit:
             self.partial_choices = [
                 contextualize_text(choice.get('name'), self.context)
@@ -1246,10 +1246,11 @@ class MultipleChoiceResponse(LoncapaResponse):
 
     def grade_via_points(self, **kwargs):
         """
-        
+        Calculates partial credit based on the Points scheme.
         Answer choices marked "partial" are given partial credit.
         Default is 50%; other amounts may be set in point_value attributes.
         Arguments: student_answers
+        Returns: a CorrectMap
         """
 
         student_answers = kwargs['student_answers']
@@ -1258,8 +1259,10 @@ class MultipleChoiceResponse(LoncapaResponse):
                 and student_answers[self.answer_id] in self.correct_choices):
             return CorrectMap(self.answer_id, correctness='correct')
 
-        elif (self.answer_id in student_answers
-                and student_answers[self.answer_id] in self.partial_choices):
+        elif (
+                self.answer_id in student_answers
+                and student_answers[self.answer_id] in self.partial_choices
+        ):
             choice_index = self.partial_choices.index(student_answers[self.answer_id])
             credit_amount = self.partial_values[choice_index]
             return CorrectMap(self.answer_id, correctness='partially-correct', npoints=credit_amount)
@@ -1271,6 +1274,7 @@ class MultipleChoiceResponse(LoncapaResponse):
         Standard grading for multiple-choice problems.
         100% credit if choices are correct; 0% otherwise
         Arguments: student_answers
+        Returns: a CorrectMap
         """
 
         student_answers = kwargs['student_answers']
