@@ -1258,15 +1258,11 @@ class MultipleChoiceResponse(LoncapaResponse):
                 and student_answers[self.answer_id] in self.correct_choices):
             return CorrectMap(self.answer_id, correctness='correct')
 
-        elif (
-                credit_type == 'points'
-                and self.answer_id in student_answers
-                and student_answers[self.answer_id] in self.partial_choices
-        ):
+        elif (self.answer_id in student_answers
+                and student_answers[self.answer_id] in self.partial_choices):
             choice_index = self.partial_choices.index(student_answers[self.answer_id])
             credit_amount = self.partial_values[choice_index]
             return CorrectMap(self.answer_id, correctness='partially-correct', npoints=credit_amount)
-
         else:
             return CorrectMap(self.answer_id, 'incorrect')
 
@@ -1289,6 +1285,10 @@ class MultipleChoiceResponse(LoncapaResponse):
         """
         grade student response.
         """
+
+        # No partial credit? Grade it right away.
+        if not self.has_partial_credit:
+            return self.grade_without_partial_credit(student_answers=student_answers)
 
         # This below checks to see whether we're using an alternate grading scheme.
         #  Set partial_credit="false" (or remove it) to require an exact answer for any credit.
