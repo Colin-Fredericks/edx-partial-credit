@@ -139,6 +139,8 @@ class LoncapaResponse(object):
 
     tags = None
     hint_tag = None
+    has_partial_credit = False
+    credit_type = []
 
     max_inputfields = None
     allowed_inputfields = []
@@ -222,7 +224,7 @@ class LoncapaResponse(object):
             self.credit_type = []
         else:
             self.has_partial_credit = True
-            self.credit_type = str(self.credit_type).split(',')
+            self.credit_type = partial_credit.split(',')
             self.credit_type = [word.strip().lower() for word in self.credit_type]
 
         if hasattr(self, 'setup_response'):
@@ -874,7 +876,9 @@ class ChoiceResponse(LoncapaResponse):
 
         return_grade = round(self.get_max_score() * float(edc_current_grade) / float(edc_max_grade), 2)
 
-        if edc_current_grade > 0:
+        if edc_current_grade == edc_max_grade:
+            return CorrectMap(self.answer_id, correctness='correct')
+        elif edc_current_grade > 0:
             return CorrectMap(self.answer_id, correctness='partially-correct', npoints=return_grade)
         else:
             return CorrectMap(self.answer_id, correctness='incorrect', npoints=0)
@@ -918,6 +922,7 @@ class ChoiceResponse(LoncapaResponse):
         100% credit if all choices are correct; 0% otherwise
         Arguments: student_answer
         """
+
         student_answer = kwargs['student_answer']
 
         required_selected = len(self.correct_choices - student_answer) == 0
@@ -980,7 +985,7 @@ class ChoiceResponse(LoncapaResponse):
 
         # Make sure we're using an approved style.
         if self.credit_type[0] not in graders:
-            raise 'partial_credit attribute should be one of: ', ','.join(graders)
+            raise LoncapaProblemError('partial_credit attribute should be one of: ' + ','.join(graders))
 
         # Run the appropriate grader.
         return graders[self.credit_type[0]](
