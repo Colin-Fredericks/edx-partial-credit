@@ -1162,16 +1162,18 @@ class MultipleChoiceResponse(LoncapaResponse):
             for choice in cxml
             if contextualize_text(choice.get('correct'), self.context).upper() == "TRUE"
         ]
-        self.partial_choices = [
-            contextualize_text(choice.get('name'), self.context)
-            for choice in cxml
-            if contextualize_text(choice.get('correct'), self.context).lower() == 'partial'
-        ]
-        self.partial_values = [
-            float(choice.get('point_value', default='0.5'))    # Default partial credit: 50%
-            for choice in cxml
-            if contextualize_text(choice.get('correct'), self.context).lower() == 'partial'
-        ]
+        
+        if self.has_partial_credit:
+            self.partial_choices = [
+                contextualize_text(choice.get('name'), self.context)
+                for choice in cxml
+                if contextualize_text(choice.get('correct'), self.context).lower() == 'partial'
+            ]
+            self.partial_values = [
+                float(choice.get('point_value', default='0.5'))    # Default partial credit: 50%
+                for choice in cxml
+                if contextualize_text(choice.get('correct'), self.context).lower() == 'partial'
+            ]
 
     def get_extended_hints(self, student_answer_dict, new_cmap):
         """
@@ -1242,25 +1244,15 @@ class MultipleChoiceResponse(LoncapaResponse):
         self.do_shuffle(self.xml, problem)
         self.do_answer_pool(self.xml, problem)
 
-    def get_score(self, student_answers):
+    def grade_via_points(self, **kwargs):
         """
-        grade student response.
+        
+        Answer choices marked "partial" are given partial credit.
+        Default is 50%; other amounts may be set in point_value attributes.
+        Arguments: student_answers
         """
 
-        tree = self.xml
-        problem_xml = tree.xpath('.')
-
-        # Partial credit type - can set 'points' only at the moment.
-        credit_type = problem_xml[0].get('partial_credit', default=False)
-
-        try:
-            credit_type = str(credit_type).lower().strip()
-        except ValueError:
-            _ = self.capa_system.i18n.ugettext
-            # Translators: 'partial_credit' is an attribute name and should not be translated.
-            # 'points' should also not be translated.
-            msg = _("partial_credit value can only be set to 'points' or be removed.")
-            raise LoncapaProblemError(msg)
+        student_answers = kwargs['student_answers']
 
         if (self.answer_id in student_answers
                 and student_answers[self.answer_id] in self.correct_choices):
@@ -1277,6 +1269,50 @@ class MultipleChoiceResponse(LoncapaResponse):
 
         else:
             return CorrectMap(self.answer_id, 'incorrect')
+
+    def grade_without_partial_credit(self, **kwargs):
+        """
+        Standard grading for multiple-choice problems.
+        100% credit if choices are correct; 0% otherwise
+        Arguments: student_answers
+        """
+
+        student_answers = kwargs['student_answers']
+
+        if (self.answer_id in student_answers
+                and student_answers[self.answer_id] in self.correct_choices):
+            return CorrectMap(self.answer_id, correctness='correct')
+        else:
+            return CorrectMap(self.answer_id, 'incorrect')
+
+    def get_score(self, student_answers):
+        """
+        grade student response.
+        """
+
+        # This below checks to see whether we're using an alternate grading scheme.
+        #  Set partial_credit="false" (or remove it) to require an exact answer for any credit.
+        #  Set partial_credit="points" to set specific point values for specific choices.
+
+        # Translators: 'partial_credit' and the items in the 'graders' object
+        # are attribute names or values and should not be translated.
+        graders = {
+            'points': self.grade_via_points,
+            'false': self.grade_without_partial_credit
+        }
+
+        # Only one type of credit at a time.
+        if len(self.credit_type) > 1:
+            raise 'Only one type of partial credit is allowed for Multiple Choice problems.'
+
+        # Make sure we're using an approved style.
+        if self.credit_type[0] not in graders:
+            raise LoncapaProblemError('partial_credit attribute should be one of: ' + ','.join(graders))
+
+        # Run the appropriate grader.
+        return graders[self.credit_type[0]](
+            student_answers=student_answers
+        )
 
     def get_answers(self):
         return {self.answer_id: self.correct_choices}
