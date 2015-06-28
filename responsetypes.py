@@ -1578,22 +1578,27 @@ class OptionResponse(LoncapaResponse):
     def get_score(self, student_answers):
         cmap = CorrectMap()
 
+        # This below checks to see whether we're using an alternate grading scheme.
+        #  Set partial_credit="false" (or remove it) to require an exact answer for any credit.
+        #  Set partial_credit="points" to allow credit for listed alternative answers.
+
+        # Translators: 'partial_credit' and the items in the 'graders' object
+        # are attribute names or values and should not be translated.
+        graders = {
+            'points': 'no separate grader yet',
+            'false': 'no separate grader yet'
+        }
+
+        if self.has_partial_credit:
+            # Only one type of credit at a time.
+            if len(self.credit_type) > 1:
+                raise 'Only one type of partial credit is allowed for Checkbox problems.'
+            # Make sure we're using an approved style.
+            if self.credit_type[0] not in graders:
+                raise LoncapaProblemError('partial_credit attribute should be one of: ' + ','.join(graders))
+
         problem_map = self.get_problem_attributes()
         answer_map = problem_map['correct']
-
-        tree = self.xml
-        problem_xml = tree.xpath('.')
-
-        # Partial credit type - can set 'points' only at the moment.
-        credit_type = problem_xml[0].get('partial_credit', default=False)
-
-        try:
-            credit_type = str(credit_type).lower().strip()
-        except ValueError:
-            _ = self.capa_system.i18n.ugettext
-            # Translators: 'partial_credit' is an attribute name and should not be translated.
-            msg = _("partial_credit value can only be set to 'points' or be removed.")
-            raise LoncapaProblemError(msg)
 
         for aid in answer_map:
             # Set correct/incorrect first, check for partial credit later.
