@@ -1623,7 +1623,7 @@ class OptionResponse(LoncapaResponse):
         Full credit for any correct answer, no credit otherwise.
         Returns a CorrectMap.
         """
-        
+
         answer_map = problem_map['correct']
         cmap = CorrectMap()
 
@@ -1672,7 +1672,6 @@ class OptionResponse(LoncapaResponse):
             problem_map=problem_map,
             student_answers=student_answers
         )
-
 
     def get_problem_attributes(self):
         """
