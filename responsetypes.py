@@ -1575,30 +1575,17 @@ class OptionResponse(LoncapaResponse):
     def setup_response(self):
         self.answer_fields = self.inputfields
 
-    def get_score(self, student_answers):
-        cmap = CorrectMap()
+    def grade_via_points(self, problem_map, student_answers):
+        """
+        Grades dropdown problems with "points"-style partial credit.
+        Full credit for any fully correct answer.
+        Partial credit for any partially correct answer.
+        Amount is set by point_values attribute, defaults to 50%.
+        Returns a CorrectMap.
+        """
 
-        # This below checks to see whether we're using an alternate grading scheme.
-        #  Set partial_credit="false" (or remove it) to require an exact answer for any credit.
-        #  Set partial_credit="points" to allow credit for listed alternative answers.
-
-        # Translators: 'partial_credit' and the items in the 'graders' object
-        # are attribute names or values and should not be translated.
-        graders = {
-            'points': 'no separate grader yet',
-            'false': 'no separate grader yet'
-        }
-
-        if self.has_partial_credit:
-            # Only one type of credit at a time.
-            if len(self.credit_type) > 1:
-                raise 'Only one type of partial credit is allowed for Checkbox problems.'
-            # Make sure we're using an approved style.
-            if self.credit_type[0] not in graders:
-                raise LoncapaProblemError('partial_credit attribute should be one of: ' + ','.join(graders))
-
-        problem_map = self.get_problem_attributes()
         answer_map = problem_map['correct']
+        cmap = CorrectMap()
 
         for aid in answer_map:
             # Set correct/incorrect first, check for partial credit later.
@@ -1610,26 +1597,82 @@ class OptionResponse(LoncapaResponse):
                     cmap.set(aid, 'incorrect')
 
             # For partial credit:
-            if credit_type == 'points':
-                partial_map = problem_map['partial']
-                points_map = problem_map['point_values']
+            partial_map = problem_map['partial']
+            points_map = problem_map['point_values']
 
-                if not cmap.is_correct(aid) and partial_map[aid] is not None:
-                    for index, word in enumerate(partial_map[aid]):
-                        # Set the correctness and point value
-                        # for each answer id independently.
-                        if aid in student_answers and student_answers[aid] == word:
-                            cmap.set(aid, 'partially-correct')
-                            cmap.set_property(aid, 'npoints', points_map[aid][index])
-                            break
-                        else:
-                            cmap.set(aid, 'incorrect')
+            if not cmap.is_correct(aid) and partial_map[aid] is not None:
+                for index, word in enumerate(partial_map[aid]):
+                    # Set the correctness and point value
+                    # for each answer id independently.
+                    if aid in student_answers and student_answers[aid] == word:
+                        cmap.set(aid, 'partially-correct')
+                        cmap.set_property(aid, 'npoints', points_map[aid][index])
+                        break
+                    else:
+                        cmap.set(aid, 'incorrect')
 
             answer_variable = self.get_student_answer_variable_name(student_answers, aid)
             if answer_variable:
                 cmap.set_property(aid, 'answervariable', answer_variable)
 
         return cmap
+
+    def grade_without_partial_credit(self, problem_map, student_answers):
+        """
+        Grades dropdown problems without partial credit.
+        Full credit for any correct answer, no credit otherwise.
+        Returns a CorrectMap.
+        """
+        
+        answer_map = problem_map['correct']
+        cmap = CorrectMap()
+
+        for aid in answer_map:
+            for word in answer_map[aid]:
+                if aid in student_answers and student_answers[aid] == word:
+                    cmap.set(aid, 'correct')
+                    break
+                else:
+                    cmap.set(aid, 'incorrect')
+
+            answer_variable = self.get_student_answer_variable_name(student_answers, aid)
+            if answer_variable:
+                cmap.set_property(aid, 'answervariable', answer_variable)
+
+        return cmap
+
+    def get_score(self, student_answers):
+
+        problem_map = self.get_problem_attributes()
+
+        # If no partial credit, grade it right now.
+        if not self.has_partial_credit:
+            return self.grade_without_partial_credit(problem_map, student_answers)
+
+        # This below checks to see whether we're using an alternate grading scheme.
+        #  Set partial_credit="false" (or remove it) to require an exact answer for any credit.
+        #  Set partial_credit="points" to allow credit for listed alternative answers.
+
+        # Translators: 'partial_credit' and the items in the 'graders' object
+        # are attribute names or values and should not be translated.
+        graders = {
+            'points': self.grade_via_points,
+            'false': self.grade_without_partial_credit
+        }
+
+        # Only one type of credit at a time.
+        if len(self.credit_type) > 1:
+            raise 'Only one type of partial credit is allowed for Checkbox problems.'
+        # Make sure we're using an approved style.
+        if self.credit_type[0] not in graders:
+            raise LoncapaProblemError('partial_credit attribute should be one of: ' + ','.join(graders))
+
+        # Run the appropriate grader.
+        return graders[self.credit_type[0]](
+            problem_map=problem_map,
+            student_answers=student_answers
+        )
+
 
     def get_problem_attributes(self):
         """
@@ -1672,9 +1715,12 @@ class OptionResponse(LoncapaResponse):
                         else:
                             small_map[answer_id][index] = str(word.strip())
                 # If we find nothing and we're looking for points, return the default.
-                elif target == 'points':
-                    num_partial = len(self.get_problem_attributes()['partial'][answer_id])
-                    small_map[answer_id] = [default_credit] * num_partial
+                elif target == 'point_values':
+                    if problem_map['partial'][answer_id] is not None:
+                        num_partial = len(problem_map['partial'][answer_id])
+                        small_map[answer_id] = [default_credit] * num_partial
+                    else:
+                        small_map[answer_id] = []
 
             # Add a copy of the in-loop map to the big map.
             problem_map[target] = dict(small_map)
