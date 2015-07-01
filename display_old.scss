@@ -108,6 +108,13 @@ div.problem {
         }
       }
 
+      &.choicegroup_partially-correct {
+        &:after {
+          margin-left: ($baseline*0.75);
+          content: url('../images/partially-correct-icon.png');
+        }
+      }
+
       &.choicegroup_incorrect {
         &:after {
           margin-left: ($baseline*0.75);
@@ -228,6 +235,19 @@ div.problem {
       }
     }
 
+    &.partially-correct, &.ui-icon-notice {
+      p.status {
+        display: inline-block;
+        width: 25px;
+        height: 20px;
+        background: url('../images/partially-correct-icon.png') center center no-repeat;
+      }
+
+      input {
+        border-color: orange;
+      }
+    }
+
     &.processing {
       p.status {
         display: inline-block;
@@ -340,7 +360,7 @@ div.problem {
         background: url('../images/correct-icon.png') center center no-repeat;
       }
 
-      &.partially-correct {
+      &.partially-correct, &.ui-icon-notice {
         display: inline-block;
         position: relative;
         top: 6px;
@@ -1120,6 +1140,10 @@ div.problem {
 
     label.choicetextgroup_incorrect, section.choicetextgroup_incorrect {
       @extend label.choicegroup_incorrect;
+    }
+
+    label.choicetextgroup_partially-correct, section.choicetextgroup_partially-correct {
+      @extend label.choicegroup_partially-correct;
     }
 
     label.choicetextgroup_show_correct, section.choicetextgroup_show_correct {
