@@ -957,7 +957,7 @@ class ChoiceResponse(LoncapaResponse):
 
         # "None apply" should really be a valid choice for "check all that apply",
         # but score feedback is broken when no boxes are marked.
-        empty_answer = student_answer == []
+        empty_answer = student_answer == set()
 
         if empty_answer:
             return CorrectMap(self.answer_id, 'incorrect')
