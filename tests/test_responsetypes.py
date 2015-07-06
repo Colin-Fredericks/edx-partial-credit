@@ -104,7 +104,7 @@ class MultiChoiceResponseTest(ResponseTest):
         self.assert_grade(problem, 'choice_2', 'incorrect')
 
     def test_partial_multiple_choice_grade(self):
-        problem = self.build_problem(choices=[False, True, 'partial'])
+        problem = self.build_problem(choices=[False, True, 'partial'], credit_type='points')
 
         # Ensure that we get the expected grades
         self.assert_grade(problem, 'choice_0', 'incorrect')
