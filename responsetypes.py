@@ -951,16 +951,16 @@ class ChoiceResponse(LoncapaResponse):
         if not isinstance(student_answer, list):
             student_answer = [student_answer]
 
-        student_answer = set(student_answer)
-
-        student_non_answers = all_choices - student_answer
-
         # "None apply" should really be a valid choice for "check all that apply",
         # but score feedback is broken when no boxes are marked.
-        empty_answer = student_answer == set()
+        empty_answer = student_answer == []
 
         if empty_answer:
             return CorrectMap(self.answer_id, 'incorrect')
+
+        student_answer = set(student_answer)
+
+        student_non_answers = all_choices - student_answer
 
         # No partial credit? Get grade right now.
         if not self.has_partial_credit:
