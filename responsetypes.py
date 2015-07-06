@@ -2118,10 +2118,6 @@ class StringResponse(LoncapaResponse):
         )
         self.correct_answer = [contextualize_text(answer, self.context).strip() for answer in correct_answers]
 
-        # remove additional_answer from xml, otherwise they will be displayed
-        for el in self.xml.findall('additional_answer'):
-            self.xml.remove(el)
-
     def get_score(self, student_answers):
         """Grade a string response """
         if self.answer_id not in student_answers:
