@@ -120,6 +120,20 @@ class MultiChoiceResponseTest(ResponseTest):
         self.assert_grade(problem, 'choice_foil_2', 'correct')
         self.assert_grade(problem, 'choice_foil_3', 'incorrect')
 
+    def test_multiple_choice_valid_grading_schemes(self):
+        # Multiple Choice problems only allow one partial credit scheme.
+        # Change this test if that changes.
+        problem = self.build_problem(choices=[False, True, 'partial'], credit_type='points,points')
+        with self.assertRaises(LoncapaProblemError):
+            input_dict = {'1_2_1': 'choice_1'}
+            problem.grade_answers(input_dict)
+
+        # 'bongo' is not a valid grading scheme.
+        problem = self.build_problem(choices=[False, True, 'partial'], credit_type='bongo')
+        with self.assertRaises(LoncapaProblemError):
+            input_dict = {'1_2_1': 'choice_1'}
+            problem.grade_answers(input_dict)
+
     def test_partial_points_multiple_choice_grade(self):
         problem = self.build_problem(choices=['partial', 'partial', 'partial'],
                                      credit_type='points',
@@ -370,6 +384,67 @@ class OptionResponseTest(ResponseTest):
 
         # Options not in the list should be marked incorrect
         self.assert_grade(problem, "invalid_option", "incorrect")
+
+    def test_grade_multiple_correct(self):
+        problem = self.build_problem(options=["first", "second", "third"],
+                                     correct_option="second,third")
+
+        # Assert that we get the expected grades
+        self.assert_grade(problem, "first", "incorrect")
+        self.assert_grade(problem, "second", "correct")
+        self.assert_grade(problem, "third", "correct")
+
+    def test_grade_partial_credit(self):
+        # Testing the "points" style.
+        problem = self.build_problem(options=["first", "second", "third"],
+                                     correct_option="second",
+                                     credit_type="points",
+                                     partial_option="third")
+
+        # Assert that we get the expected grades
+        self.assert_grade(problem, "first", "incorrect")
+        self.assert_grade(problem, "second", "correct")
+        self.assert_grade(problem, "third", "partially-correct")
+
+    def test_grade_partial_credit_with_points(self):
+        # Testing the "points" style with specified point values.
+        problem = self.build_problem(options=["first", "second", "third"],
+                                     correct_option="second",
+                                     credit_type="points",
+                                     partial_option="third",
+                                     point_values="0.3")
+
+        # Assert that we get the expected grades and scores
+        self.assert_grade(problem, "first", "incorrect")
+        correct_map = problem.grade_answers({'1_2_1': 'first'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0)
+
+        self.assert_grade(problem, "second", "correct")
+        correct_map = problem.grade_answers({'1_2_1': 'second'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 1)
+
+        self.assert_grade(problem, "third", "partially-correct")
+        correct_map = problem.grade_answers({'1_2_1': 'third'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.3)
+
+    def test_grade_partial_credit_valid_scheme(self):
+        # Only one type of partial credit currently allowed.
+        problem = self.build_problem(options=["first", "second", "third"],
+                                     correct_option="second",
+                                     credit_type="points,points",
+                                     partial_option="third")
+        with self.assertRaises(LoncapaProblemError):
+            input_dict = {'1_2_1': 'second'}
+            problem.grade_answers(input_dict)
+
+        # 'bongo' is not a valid grading scheme.
+        problem = self.build_problem(options=["first", "second", "third"],
+                                     correct_option="second",
+                                     credit_type="bongo",
+                                     partial_option="third")
+        with self.assertRaises(LoncapaProblemError):
+            input_dict = {'1_2_1': 'second'}
+            problem.grade_answers(input_dict)
 
     def test_quote_option(self):
         # Test that option response properly escapes quotes inside options strings
@@ -1129,6 +1204,24 @@ class ChoiceResponseTest(ResponseTest):
 
         # No choice 3 exists --> mark incorrect
         self.assert_grade(problem, 'choice_3', 'incorrect')
+
+    def test_checkbox_group_valid_grading_schemes(self):
+        # Checkbox-type problems only allow one partial credit scheme.
+        # Change this test if that changes.
+        problem = self.build_problem(choice_type='checkbox',
+                                     choices=[False, False, True, True],
+                                     credit_type='edc,halves,bongo')
+        with self.assertRaises(LoncapaProblemError):
+            input_dict = {'1_2_1': 'choice_1'}
+            problem.grade_answers(input_dict)
+
+        # 'bongo' is not a valid grading scheme.
+        problem = self.build_problem(choice_type='checkbox',
+                                     choices=[False, False, True, True],
+                                     credit_type='bongo')
+        with self.assertRaises(LoncapaProblemError):
+            input_dict = {'1_2_1': 'choice_1'}
+            problem.grade_answers(input_dict)
 
     def test_checkbox_group_partial_credit_grade(self):
         # First: Every Decision Counts grading style
