@@ -120,6 +120,22 @@ class MultiChoiceResponseTest(ResponseTest):
         self.assert_grade(problem, 'choice_foil_2', 'correct')
         self.assert_grade(problem, 'choice_foil_3', 'incorrect')
 
+    def test_partial_points_multiple_choice_grade(self):
+        problem = self.build_problem(choices=['partial', 'partial', 'partial'],
+                                     credit_type='points',
+                                     points=['1', '0.6', '0'])
+
+        # Ensure that we get the expected number of points
+        # Using assertAlmostEqual to avoid floating point issues
+        correct_map = problem.grade_answers({'1_2_1': 'choice_0'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 1)
+
+        correct_map = problem.grade_answers({'1_2_1': 'choice_1'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.6)
+
+        correct_map = problem.grade_answers({'1_2_1': 'choice_2'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0)
+
 
 class TrueFalseResponseTest(ResponseTest):
     xml_factory_class = TrueFalseResponseXMLFactory
