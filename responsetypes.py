@@ -1855,6 +1855,14 @@ class NumericalResponse(LoncapaResponse):
         if self.answer_id not in student_answers:
             return CorrectMap(self.answer_id, 'incorrect')
 
+        # Make sure we're using an approved partial credit style.
+        # Currently implemented: 'close' and 'list'
+        if self.has_partial_credit:
+            graders = ['list','close']
+            for style in self.credit_type:
+                if style not in graders:
+                    raise LoncapaProblemError('partial_credit attribute should be one of: ' + ','.join(graders))
+
         student_answer = student_answers[self.answer_id]
 
         _ = self.capa_system.i18n.ugettext
@@ -1984,7 +1992,7 @@ class NumericalResponse(LoncapaResponse):
                     if compare_with_tolerance(student_float, value, self.tolerance):
                         is_correct = 'partially-correct'
                     elif 'close' in self.credit_type:
-                        if compare_with_tolerance(student_float, value, self.tolerance):
+                        if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
                             is_correct = 'partially-correct'
                             partial_score = partial_score * partial_score
             elif 'close' in self.credit_type:
