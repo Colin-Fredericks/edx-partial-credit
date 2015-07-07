@@ -57,6 +57,7 @@ class CorrectMapTest(unittest.TestCase):
         self.assertTrue(self.cmap.is_correct('3_2_1'))
 
         self.assertTrue(self.cmap.is_partially_correct('3_2_1'))
+        self.assertFalse(self.cmap.is_partially_correct('2_2_1'))
 
         self.assertEqual(self.cmap.get_correctness('1_2_1'), 'correct')
         self.assertEqual(self.cmap.get_correctness('2_2_1'), 'incorrect')
