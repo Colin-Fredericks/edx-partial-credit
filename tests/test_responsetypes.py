@@ -1692,11 +1692,18 @@ class CustomResponseTest(ResponseTest):
         #       or an ordered list of answers (if there are multiple inputs)
         #
         # The function should return a dict of the form
-        # { 'ok': BOOL, 'msg': STRING } (no 'grade_decimal' key to test that it's optional)
+        # { 'ok': BOOL or STRING, 'msg': STRING } (no 'grade_decimal' key to test that it's optional)
         #
         script = textwrap.dedent("""
             def check_func(expect, answer_given):
-                return {'ok': answer_given == expect, 'msg': 'Message text'}
+                partial_credit = '21'
+                if answer_given == expect:
+                    retval = True
+                elif answer_given == partial_credit:
+                    retval = 'partial'
+                else:
+                    retval = False
+                return {'ok': retval, 'msg': 'Message text'}
         """)
 
         problem = self.build_problem(script=script, cfn="check_func", expect="42")
@@ -1712,6 +1719,18 @@ class CustomResponseTest(ResponseTest):
         self.assertEqual(correctness, 'correct')
         self.assertEqual(msg, "Message text")
         self.assertEqual(npoints, 1)
+
+        # Partial Credit answer
+        input_dict = {'1_2_1': '21'}
+        correct_map = problem.grade_answers(input_dict)
+
+        correctness = correct_map.get_correctness('1_2_1')
+        msg = correct_map.get_msg('1_2_1')
+        npoints = correct_map.get_npoints('1_2_1')
+
+        self.assertEqual(correctness, 'partially-correct')
+        self.assertEqual(msg, "Message text")
+        self.assertTrue(0 <= npoints <= 1)
 
         # Incorrect answer
         input_dict = {'1_2_1': '0'}
@@ -1734,14 +1753,24 @@ class CustomResponseTest(ResponseTest):
         #       or an ordered list of answers (if there are multiple inputs)
         #
         # The function should return a dict of the form
-        # { 'ok': BOOL, 'msg': STRING, 'grade_decimal': FLOAT }
+        # { 'ok': BOOL or STRING, 'msg': STRING, 'grade_decimal': FLOAT }
         #
         script = textwrap.dedent("""
             def check_func(expect, answer_given):
+                partial_credit = '21'
+                if answer_given == expect:
+                    retval = True
+                    score = 0.9
+                elif answer_given == partial_credit:
+                    retval = 'partial'
+                    score = 0.5
+                else:
+                    retval = False
+                    score = 0.1
                 return {
-                    'ok': answer_given == expect,
+                    'ok': retval,
                     'msg': 'Message text',
-                    'grade_decimal': 0.9 if answer_given == expect else 0.1,
+                    'grade_decimal': score,
                 }
         """)
 
@@ -1759,16 +1788,28 @@ class CustomResponseTest(ResponseTest):
         self.assertEqual(correct_map.get_npoints('1_2_1'), 0.1)
         self.assertEqual(correct_map.get_correctness('1_2_1'), 'incorrect')
 
+        # Partially Correct answer
+        input_dict = {'1_2_1': '21'}
+        correct_map = problem.grade_answers(input_dict)
+        self.assertEqual(correct_map.get_npoints('1_2_1'), 0.5)
+        self.assertEqual(correct_map.get_correctness('1_2_1'), 'partially-correct')
+
     def test_function_code_multiple_input_no_msg(self):
 
         # Check functions also have the option of returning
-        # a single boolean value
+        # a single boolean or string value
         # If true, mark all the inputs correct
+        # If one is true but not the other, mark all partially correct
         # If false, mark all the inputs incorrect
         script = textwrap.dedent("""
             def check_func(expect, answer_given):
-                return (answer_given[0] == expect and
-                        answer_given[1] == expect)
+                if answer_given[0] == expect and answer_given[1] == expect:
+                    retval = True
+                elif answer_given[0] == expect or answer_given[1] == expect:
+                    retval = 'partial'
+                else:
+                    retval = False
+                return retval
         """)
 
         problem = self.build_problem(script=script, cfn="check_func",
@@ -1784,8 +1825,18 @@ class CustomResponseTest(ResponseTest):
         correctness = correct_map.get_correctness('1_2_2')
         self.assertEqual(correctness, 'correct')
 
-        # One answer incorrect -- expect both inputs marked incorrect
+        # One answer incorrect -- expect both inputs marked partially correct
         input_dict = {'1_2_1': '0', '1_2_2': '42'}
+        correct_map = problem.grade_answers(input_dict)
+
+        correctness = correct_map.get_correctness('1_2_1')
+        self.assertEqual(correctness, 'partially-correct')
+
+        correctness = correct_map.get_correctness('1_2_2')
+        self.assertEqual(correctness, 'partially-correct')
+
+        # Both answers incorrect -- expect both inputs marked incorrect
+        input_dict = {'1_2_1': '0', '1_2_2': '0'}
         correct_map = problem.grade_answers(input_dict)
 
         correctness = correct_map.get_correctness('1_2_1')
@@ -1800,7 +1851,8 @@ class CustomResponseTest(ResponseTest):
         # the check function can return a dict of the form:
         #
         # {'overall_message': STRING,
-        #  'input_list': [{'ok': BOOL, 'msg': STRING}, ...] } (no grade_decimal to test it's optional)
+        #  'input_list': [{'ok': BOOL or STRING, 'msg': STRING}, ...] } 
+        # (no grade_decimal to test it's optional)
         #
         # 'overall_message' is displayed at the end of the response
         #
@@ -1811,18 +1863,20 @@ class CustomResponseTest(ResponseTest):
                 check1 = (int(answer_given[0]) == 1)
                 check2 = (int(answer_given[1]) == 2)
                 check3 = (int(answer_given[2]) == 3)
+                check4 = 'partial' if answer_given[3] == 'four' else False
                 return {'overall_message': 'Overall message',
                         'input_list': [
                             {'ok': check1,  'msg': 'Feedback 1'},
                             {'ok': check2,  'msg': 'Feedback 2'},
-                            {'ok': check3,  'msg': 'Feedback 3'} ] }
+                            {'ok': check3,  'msg': 'Feedback 3'},
+                            {'ok': check4,  'msg': 'Feedback 4'} ] }
             """)
 
         problem = self.build_problem(script=script,
-                                     cfn="check_func", num_inputs=3)
+                                     cfn="check_func", num_inputs=4)
 
         # Grade the inputs (one input incorrect)
-        input_dict = {'1_2_1': '-999', '1_2_2': '2', '1_2_3': '3'}
+        input_dict = {'1_2_1': '-999', '1_2_2': '2', '1_2_3': '3', '1_2_4': 'four'}
         correct_map = problem.grade_answers(input_dict)
 
         # Expect that we receive the overall message (for the whole response)
@@ -1832,16 +1886,19 @@ class CustomResponseTest(ResponseTest):
         self.assertEqual(correct_map.get_correctness('1_2_1'), 'incorrect')
         self.assertEqual(correct_map.get_correctness('1_2_2'), 'correct')
         self.assertEqual(correct_map.get_correctness('1_2_3'), 'correct')
+        self.assertEqual(correct_map.get_correctness('1_2_4'), 'partially-correct')
 
         # Expect that the inputs were given correct npoints
         self.assertEqual(correct_map.get_npoints('1_2_1'), 0)
         self.assertEqual(correct_map.get_npoints('1_2_2'), 1)
         self.assertEqual(correct_map.get_npoints('1_2_3'), 1)
+        self.assertTrue(0 <= correct_map.get_npoints('1_2_3') <= 1)
 
         # Expect that we received messages for each individual input
         self.assertEqual(correct_map.get_msg('1_2_1'), 'Feedback 1')
         self.assertEqual(correct_map.get_msg('1_2_2'), 'Feedback 2')
         self.assertEqual(correct_map.get_msg('1_2_3'), 'Feedback 3')
+        self.assertEqual(correct_map.get_msg('1_2_4'), 'Feedback 4')
 
     def test_function_code_multiple_inputs_decimal_score(self):
 
@@ -1849,7 +1906,8 @@ class CustomResponseTest(ResponseTest):
         # the check function can return a dict of the form:
         #
         # {'overall_message': STRING,
-        #  'input_list': [{'ok': BOOL, 'msg': STRING, 'grade_decimal': FLOAT}, ...] }
+        #  'input_list': [{'ok': BOOL or STRING, 
+        #                  'msg': STRING, 'grade_decimal': FLOAT}, ...] }
         #        #
         # 'input_list' contains dictionaries representing the correctness
         #           and message for each input.
@@ -1858,33 +1916,38 @@ class CustomResponseTest(ResponseTest):
                 check1 = (int(answer_given[0]) == 1)
                 check2 = (int(answer_given[1]) == 2)
                 check3 = (int(answer_given[2]) == 3)
+                check4 = 'partial' if answer_given[3] == 'four' else False
                 score1 = 0.9 if check1 else 0.1
                 score2 = 0.9 if check2 else 0.1
                 score3 = 0.9 if check3 else 0.1
+                score4 = 0.7 if check4 == 'partial' else 0.1
                 return {
                     'input_list': [
                         {'ok': check1, 'grade_decimal': score1, 'msg': 'Feedback 1'},
                         {'ok': check2, 'grade_decimal': score2, 'msg': 'Feedback 2'},
                         {'ok': check3, 'grade_decimal': score3, 'msg': 'Feedback 3'},
+                        {'ok': check4, 'grade_decimal': score4, 'msg': 'Feedback 4'},
                     ]
                 }
             """)
 
-        problem = self.build_problem(script=script, cfn="check_func", num_inputs=3)
+        problem = self.build_problem(script=script, cfn="check_func", num_inputs=4)
 
         # Grade the inputs (one input incorrect)
-        input_dict = {'1_2_1': '-999', '1_2_2': '2', '1_2_3': '3'}
+        input_dict = {'1_2_1': '-999', '1_2_2': '2', '1_2_3': '3', '1_2_4': 'four'}
         correct_map = problem.grade_answers(input_dict)
 
         # Expect that the inputs were graded individually
         self.assertEqual(correct_map.get_correctness('1_2_1'), 'incorrect')
         self.assertEqual(correct_map.get_correctness('1_2_2'), 'correct')
         self.assertEqual(correct_map.get_correctness('1_2_3'), 'correct')
+        self.assertEqual(correct_map.get_correctness('1_2_4'), 'partially-correct')
 
         # Expect that the inputs were given correct npoints
         self.assertEqual(correct_map.get_npoints('1_2_1'), 0.1)
         self.assertEqual(correct_map.get_npoints('1_2_2'), 0.9)
         self.assertEqual(correct_map.get_npoints('1_2_3'), 0.9)
+        self.assertEqual(correct_map.get_npoints('1_2_4'), 0.7)
 
     def test_function_code_with_extra_args(self):
         script = textwrap.dedent("""\
@@ -1931,8 +1994,12 @@ class CustomResponseTest(ResponseTest):
                 check1 = (int(answer_given[0]) == 1)
                 check2 = (int(answer_given[1]) == 2)
                 check3 = (int(answer_given[2]) == 3)
-                return {'ok': (check1 and check2 and check3),
-                        'msg': 'Message text'}
+                if int(answer_given[0]) == -1:
+                    return {'ok': 'partial',
+                            'msg': 'Message text'}
+                else:
+                    return {'ok': (check1 and check2 and check3),
+                            'msg': 'Message text'}
             """)
 
         problem = self.build_problem(script=script,
@@ -1946,6 +2013,15 @@ class CustomResponseTest(ResponseTest):
         self.assertEqual(correct_map.get_correctness('1_2_1'), 'incorrect')
         self.assertEqual(correct_map.get_correctness('1_2_2'), 'incorrect')
         self.assertEqual(correct_map.get_correctness('1_2_3'), 'incorrect')
+
+        # Grade the inputs (one input partially correct)
+        input_dict = {'1_2_1': '-1', '1_2_2': '2', '1_2_3': '3'}
+        correct_map = problem.grade_answers(input_dict)
+
+        # Everything marked incorrect
+        self.assertEqual(correct_map.get_correctness('1_2_1'), 'partially-correct')
+        self.assertEqual(correct_map.get_correctness('1_2_2'), 'partially-correct')
+        self.assertEqual(correct_map.get_correctness('1_2_3'), 'partially-correct')
 
         # Grade the inputs (everything correct)
         input_dict = {'1_2_1': '1', '1_2_2': '2', '1_2_3': '3'}
