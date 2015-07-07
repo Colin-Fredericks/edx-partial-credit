@@ -204,7 +204,7 @@ class NumericalResponse(LoncapaResponse):
             #  Set via partial_credit="list"
             #
             #  If the student answer is within expanded tolerance of an alternative answer,
-            #  the student gets 25%. (We take the 50% and square it, at the moment.)
+            #  the student gets 25%.
             #  Set via partial_credit="list,close" or "close, list" or the like.
 
             if str(self.tolerance).endswith('%'):
@@ -223,7 +223,10 @@ class NumericalResponse(LoncapaResponse):
                     elif 'close' in self.credit_type:
                         if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
                             is_correct = 'partially-correct'
-                            partial_score = partial_score * partial_score
+                            partial_score = 0.5
+                        elif compare_with_tolerance(student_float, value, expanded_tolerance):
+                            is_correct = 'partially-correct'
+                            partial_score = 0.25
             elif 'close' in self.credit_type:
                 if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
                     is_correct = 'partially-correct'
