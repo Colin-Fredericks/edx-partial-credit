@@ -1452,8 +1452,15 @@ class NumericalResponseTest(ResponseTest):
             partial_answers='2,8,-4')
         correct_responses = ["4", "4.0"]
         incorrect_responses = ["1", "3", "0", "-2"]
-        partial_responses = ["2", "2.1", "8", "7.9", "8.1", "-4", "-4.15", "4.5", "3.5"]
+        partial_responses = ["2", "2.1", "1.5", "8", "7.5", "8.1", "-4", "-4.15", "-3.5", "4.5", "3.5"]
         self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
+
+    def test_numerical_valid_grading_schemes(self):
+        # 'bongo' is not a valid grading scheme.
+        problem = self.build_problem(answer=4, tolerance=0.1, credit_type='bongo')
+        input_dict = {'1_2_1': '4'}
+        with self.assertRaises(LoncapaProblemError):
+            problem.grade_answers(input_dict)
 
     def test_grade_decimal_tolerance(self):
         problem = self.build_problem(answer=4, tolerance=0.1)
