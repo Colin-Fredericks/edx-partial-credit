@@ -82,6 +82,19 @@ class ResponseTest(unittest.TestCase):
             result = problem.grade_answers({'1_2_1': input_str}).get_correctness('1_2_1')
             self.assertEqual(result, 'incorrect')
 
+    def assert_multiple_partial(self, problem, correct_answers, incorrect_answers, partial_answers):
+        for input_str in correct_answers:
+            result = problem.grade_answers({'1_2_1': input_str}).get_correctness('1_2_1')
+            self.assertEqual(result, 'correct')
+
+        for input_str in incorrect_answers:
+            result = problem.grade_answers({'1_2_1': input_str}).get_correctness('1_2_1')
+            self.assertEqual(result, 'incorrect')
+
+        for input_str in partial_answers:
+            result = problem.grade_answers({'1_2_1': input_str}).get_correctness('1_2_1')
+            self.assertEqual(result, 'partially-correct')
+
     def _get_random_number_code(self):
         """Returns code to be used to generate a random result."""
         return "str(random.randint(0, 1e9))"
@@ -1401,6 +1414,46 @@ class NumericalResponseTest(ResponseTest):
         correct_responses = ["4", "4.0", "4.00"]
         incorrect_responses = ["", "3.9", "4.1", "0"]
         self.assert_multiple_grade(problem, correct_responses, incorrect_responses)
+
+    def test_grade_partial(self):
+        # First: "list"-style grading scheme.
+        problem = self.build_problem(answer=4,
+            credit_type='list',
+            partial_answers='2,8,-4')
+        correct_responses = ["4", "4.0"]
+        incorrect_responses = ["1", "3", "4.1", "0", "-2"]
+        partial_responses = ["2", "2.0", "-4", "-4.0", "8", "8.0"]
+        self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
+
+        # Second: "close"-style grading scheme. Default range is twice tolerance.
+        problem = self.build_problem(answer=4,
+            tolerance=0.2,
+            credit_type='close')
+        correct_responses = ["4", "4.1", "3.9"]
+        incorrect_responses = ["1", "3", "4.5", "0", "-2"]
+        partial_responses = ["4.3", "3.7"]
+        self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
+
+        # Third: "close"-style grading scheme with partial_range set.
+        problem = self.build_problem(answer=4,
+            tolerance=0.2,
+            partial_range=3,
+            credit_type='close')
+        correct_responses = ["4", "4.1"]
+        incorrect_responses = ["1", "3", "0", "-2"]
+        partial_responses = ["4.5","3.5"]
+        self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
+
+        # Fourth: both "list"- and "close"-style grading schemes at once.
+        problem = self.build_problem(answer=4,
+            tolerance=0.2,
+            partial_range=3,
+            credit_type='close,list',
+            partial_answers='2,8,-4')
+        correct_responses = ["4", "4.0"]
+        incorrect_responses = ["1", "3", "0", "-2"]
+        partial_responses = ["2", "2.1", "8", "7.9", "8.1", "-4", "-4.15", "4.5", "3.5"]
+        self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
 
     def test_grade_decimal_tolerance(self):
         problem = self.build_problem(answer=4, tolerance=0.1)

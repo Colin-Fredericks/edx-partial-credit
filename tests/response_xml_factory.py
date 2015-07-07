@@ -201,10 +201,23 @@ class NumericalResponseXMLFactory(ResponseXMLFactory):
         *tolerance*: The tolerance within which a response
         is considered correct.  Can be a decimal (e.g. "0.01")
         or percentage (e.g. "2%")
+
+        *credit_type*: String of comma-separated words specifying the
+        partial credit grading scheme.
+
+        *partial_range*: The multiplier for the tolerance that will
+        still provide partial credit in the "close" grading style
+
+        *partial_answers*: A string of comma-separated alternate
+        answers that will receive partial credit in the "list" style
         """
+
 
         answer = kwargs.get('answer', None)
         tolerance = kwargs.get('tolerance', None)
+        credit_type = kwargs.get('credit_type', None)
+        partial_range = kwargs.get('partial_range', None)
+        partial_answers = kwargs.get('partial_answers', None)
 
         response_element = etree.Element('numericalresponse')
 
@@ -218,6 +231,12 @@ class NumericalResponseXMLFactory(ResponseXMLFactory):
             responseparam_element = etree.SubElement(response_element, 'responseparam')
             responseparam_element.set('type', 'tolerance')
             responseparam_element.set('default', str(tolerance))
+            if partial_range is not None and 'close' in credit_type:
+                responseparam_element.set('partial_range', str(partial_range))
+
+        if partial_answers is not None and 'list' in credit_type:
+            responseparam_element = etree.SubElement(response_element, 'responseparam')
+            responseparam_element.set('partial_answers', partial_answers)
 
         return response_element
 
@@ -656,11 +675,11 @@ class OptionResponseXMLFactory(ResponseXMLFactory):
                     You must specify at least 2 options.
         *correct_option*: a string with comma-separated correct choices [REQUIRED]
         *partial_option*: a string with comma-separated partially-correct choices
-        *point_values*: a string with comma-separated values 
-                        giving partial credit values (0-1). 
-                        Must have one per partial option.
+        *point_values*: a string with comma-separated values (0-1) that give the 
+            partial credit values in the "points" grading scheme.
+            Must have one per partial option.
         *credit_type*: String of comma-separated words specifying the
-                       partial credit grading scheme.
+            partial credit grading scheme.
         """
 
         options_list = kwargs.get('options', None)
