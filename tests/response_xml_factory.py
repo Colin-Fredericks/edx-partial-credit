@@ -49,6 +49,9 @@ class ResponseXMLFactory(object):
         *num_inputs*: The number of input elements
             to create [DEFAULT: 1]
 
+        *credit_type*: String of comma-separated words specifying the
+            partial credit grading scheme.
+
         Returns a string representation of the XML tree.
         """
 
@@ -58,6 +61,7 @@ class ResponseXMLFactory(object):
         script = kwargs.get('script', None)
         num_responses = kwargs.get('num_responses', 1)
         num_inputs = kwargs.get('num_inputs', 1)
+        credit_type = kwargs.get('credit_type', None)
 
         # The root is <problem>
         root = etree.Element("problem")
@@ -75,6 +79,11 @@ class ResponseXMLFactory(object):
         # Add the response(s)
         for __ in range(int(num_responses)):
             response_element = self.create_response_element(**kwargs)
+
+            # Set partial credit
+            if credit_type is not None:
+                response_element.set('partial_credit', str(credit_type))
+
             root.append(response_element)
 
             # Add input elements
@@ -133,8 +142,9 @@ class ResponseXMLFactory(object):
                         If specified, you must ensure that
                         len(choice_names) == len(choices)
 
-        *credit_type*: String of comma-separated values.
-                       Currently available: 'points' or 'false'
+        *points*: List of strings giving partial credit values (0-1)
+                  for each choice. Interpreted as floats in problem.
+                  If specified, ensure len(points) == len(choices)
         """
         # Names of group elements
         group_element_names = {
@@ -147,27 +157,23 @@ class ResponseXMLFactory(object):
         choices = kwargs.get('choices', [True])
         choice_type = kwargs.get('choice_type', 'multiple')
         choice_names = kwargs.get('choice_names', [None] * len(choices))
-        credit_type = kwargs.get('credit_type', None)
+        points = kwargs.get('points', [None] * len(choices))
 
         # Create the <choicegroup>, <checkboxgroup>, or <radiogroup> element
         assert(choice_type in group_element_names)
         group_element = etree.Element(group_element_names[choice_type])
 
-        # Set partial credit
-        if credit_type is not None:
-            group_element.set('partial_credit', credit_type)
-
         # Create the <choice> elements
-        for (correct_val, name) in zip(choices, choice_names):
+        for (correct_val, name, pointval) in zip(choices, choice_names, points):
             choice_element = etree.SubElement(group_element, "choice")
-            if correct_val == True:
+            if correct_val is True:
                 correctness = 'true'
-            elif correct_val == False:
+            elif correct_val is False:
                 correctness = 'false'
             elif 'partial' in correct_val:
                 correctness = 'partial'
 
-            choice_element.set("correct", correctness)
+            choice_element.set('correct', correctness)
 
             # Add a name identifying the choice, if one exists
             # For simplicity, we use the same string as both the
@@ -175,6 +181,10 @@ class ResponseXMLFactory(object):
             if name:
                 choice_element.text = str(name)
                 choice_element.set("name", str(name))
+
+            # Add point values for partially-correct choices.
+            if pointval:
+                choice_element.set("point_value", str(pointval))
 
         return group_element
 
