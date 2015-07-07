@@ -1893,14 +1893,6 @@ class NumericalResponse(LoncapaResponse):
         tree = self.xml
         problem_xml = tree.xpath('.')
 
-        # Partial credit type - can set 'close' or 'list'
-        credit_type = problem_xml[0].get('partial_credit', default=False)
-
-        # Allowing for multiple partial credit types. Divide on commas, strip whitespace.
-        if credit_type:
-            credit_type = credit_type.split(',')
-            credit_type = [word.strip().lower() for word in credit_type]
-
         # What multiple of the tolerance is worth partial credit?
         has_partial_range = tree.xpath('responseparam[@partial_range]')
         if has_partial_range:
@@ -1949,9 +1941,9 @@ class NumericalResponse(LoncapaResponse):
                 if boundaries[0] < student_float < boundaries[1]:
                     is_correct = 'correct'
                 else:
-                    if credit_type is False:
+                    if self.has_partial_credit is False:
                         pass
-                    elif 'close' in credit_type:
+                    elif 'close' in self.credit_type:
                         # Partial credit: 50% if the student is outside the specified boundaries,
                         # but within an extended set of boundaries.
 
@@ -1985,17 +1977,17 @@ class NumericalResponse(LoncapaResponse):
 
             if compare_with_tolerance(student_float, correct_float, self.tolerance):
                 is_correct = 'correct'
-            elif credit_type is False:
+            elif self.has_partial_credit is False:
                 pass
-            elif 'list' in credit_type:
+            elif 'list' in self.credit_type:
                 for value in partial_answers:
                     if compare_with_tolerance(student_float, value, self.tolerance):
                         is_correct = 'partially-correct'
-                    elif 'close' in credit_type:
+                    elif 'close' in self.credit_type:
                         if compare_with_tolerance(student_float, value, self.tolerance):
                             is_correct = 'partially-correct'
                             partial_score = partial_score * partial_score
-            elif 'close' in credit_type:
+            elif 'close' in self.credit_type:
                 if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
                     is_correct = 'partially-correct'
 

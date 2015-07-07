@@ -81,6 +81,9 @@ class NumericalResponse(LoncapaResponse):
         """
         Grade a numeric response.
         """
+        if self.answer_id not in student_answers:
+            return CorrectMap(self.answer_id, 'incorrect')
+
         student_answer = student_answers[self.answer_id]
 
         _ = self.capa_system.i18n.ugettext
@@ -119,20 +122,10 @@ class NumericalResponse(LoncapaResponse):
         tree = self.xml
         problem_xml = tree.xpath('.')
 
-        # Partial credit type - can set 'close' or 'list'
-        credit_type = problem_xml[0].get('partial_credit', default=False)
-
-        # Allowing for multiple partial credit types. Divide on commas, strip whitespace.
-        if credit_type:
-            credit_type = credit_type.split(',')
-            credit_type = [word.strip().lower() for word in credit_type]
-
         # What multiple of the tolerance is worth partial credit?
-        has_partial_range = tree.xpath('responseparam[@partial-range]')
+        has_partial_range = tree.xpath('responseparam[@partial_range]')
         if has_partial_range:
-            partial_range = has_partial_range[0].get('partial-range', default='2')
-            # Keep only digits in case people want to write 'x2' or '2x'
-            partial_range = float(re.sub(r'\D', '', partial_range))
+            partial_range = float(has_partial_range[0].get('partial_range', default='2'))
         else:
             partial_range = 2
 
@@ -177,9 +170,9 @@ class NumericalResponse(LoncapaResponse):
                 if boundaries[0] < student_float < boundaries[1]:
                     is_correct = 'correct'
                 else:
-                    if credit_type is False:
+                    if self.has_partial_credit is False:
                         pass
-                    elif 'close' in credit_type:
+                    elif 'close' in self.credit_type:
                         # Partial credit: 50% if the student is outside the specified boundaries,
                         # but within an extended set of boundaries.
 
@@ -213,17 +206,17 @@ class NumericalResponse(LoncapaResponse):
 
             if compare_with_tolerance(student_float, correct_float, self.tolerance):
                 is_correct = 'correct'
-            elif credit_type is False:
+            elif self.has_partial_credit is False:
                 pass
-            elif 'list' in credit_type:
+            elif 'list' in self.credit_type:
                 for value in partial_answers:
                     if compare_with_tolerance(student_float, value, self.tolerance):
                         is_correct = 'partially-correct'
-                    elif 'close' in credit_type:
+                    elif 'close' in self.credit_type:
                         if compare_with_tolerance(student_float, value, self.tolerance):
                             is_correct = 'partially-correct'
                             partial_score = partial_score * partial_score
-            elif 'close' in credit_type:
+            elif 'close' in self.credit_type:
                 if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
                     is_correct = 'partially-correct'
 
@@ -255,5 +248,23 @@ class NumericalResponse(LoncapaResponse):
 
     def get_answers(self):
         return {self.answer_id: self.correct_answer}
+
+    def get_extended_hints(self, student_answers, new_cmap):
+        """
+        Extract numericalresponse extended hint, e.g.
+          <correcthint>Yes, 1+1 IS 2<correcthint>
+        """
+        if self.answer_id in student_answers:
+            if new_cmap.cmap[self.answer_id]['correctness'] == 'correct':  # if the grader liked the student's answer
+                # Note: using self.id here, not the more typical self.answer_id
+                hints = self.xml.xpath('//numericalresponse[@id=$id]/correcthint', id=self.id)
+                if hints:
+                    hint_node = hints[0]
+                    new_cmap[self.answer_id]['msg'] += self.make_hint_div(
+                        hint_node,
+                        True,
+                        [student_answers[self.answer_id]],
+                        self.tags[0]
+                    )
 
 #-----------------------------------------------------------------------------
