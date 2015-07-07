@@ -212,7 +212,6 @@ class NumericalResponseXMLFactory(ResponseXMLFactory):
         answers that will receive partial credit in the "list" style
         """
 
-
         answer = kwargs.get('answer', None)
         tolerance = kwargs.get('tolerance', None)
         credit_type = kwargs.get('credit_type', None)
@@ -675,7 +674,7 @@ class OptionResponseXMLFactory(ResponseXMLFactory):
                     You must specify at least 2 options.
         *correct_option*: a string with comma-separated correct choices [REQUIRED]
         *partial_option*: a string with comma-separated partially-correct choices
-        *point_values*: a string with comma-separated values (0-1) that give the 
+        *point_values*: a string with comma-separated values (0-1) that give the
             partial credit values in the "points" grading scheme.
             Must have one per partial option.
         *credit_type*: String of comma-separated words specifying the
@@ -691,7 +690,7 @@ class OptionResponseXMLFactory(ResponseXMLFactory):
         assert(options_list and correct_option)
         assert(len(options_list) > 1)
         for option in correct_option.split(','):
-            assert(option.strip() in options_list)
+            assert option.strip() in options_list
 
         # Create the <optioninput> element
         optioninput_element = etree.Element("optioninput")
@@ -704,7 +703,7 @@ class OptionResponseXMLFactory(ResponseXMLFactory):
 
         # Set the "correct" attribute
         optioninput_element.set('correct', str(correct_option))
-        
+
         # If we have 'points'-style partial credit...
         if 'points' in str(credit_type):
             # Set the "partial" attribute

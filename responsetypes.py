@@ -1858,7 +1858,7 @@ class NumericalResponse(LoncapaResponse):
         # Make sure we're using an approved partial credit style.
         # Currently implemented: 'close' and 'list'
         if self.has_partial_credit:
-            graders = ['list','close']
+            graders = ['list', 'close']
             for style in self.credit_type:
                 if style not in graders:
                     raise LoncapaProblemError('partial_credit attribute should be one of: ' + ','.join(graders))
@@ -1899,7 +1899,6 @@ class NumericalResponse(LoncapaResponse):
         # End `evaluator` block -- we figured out the student's answer!
 
         tree = self.xml
-        problem_xml = tree.xpath('.')
 
         # What multiple of the tolerance is worth partial credit?
         has_partial_range = tree.xpath('responseparam[@partial_range]')
