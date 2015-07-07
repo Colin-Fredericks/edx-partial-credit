@@ -1902,9 +1902,9 @@ class NumericalResponse(LoncapaResponse):
             credit_type = [word.strip().lower() for word in credit_type]
 
         # What multiple of the tolerance is worth partial credit?
-        has_partial_range = tree.xpath('responseparam[@partial-range]')
+        has_partial_range = tree.xpath('responseparam[@partial_range]')
         if has_partial_range:
-            partial_range = float(has_partial_range[0].get('partial-range', default='2'))
+            partial_range = float(has_partial_range[0].get('partial_range', default='2'))
         else:
             partial_range = 2
 

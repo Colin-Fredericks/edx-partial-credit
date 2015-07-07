@@ -35,6 +35,6 @@
 
 <numericalresponse answer="93*10^6" partial_credit="close">
   <formulaequationinput label="How many miles away from Earth is the sun? Use scientific notation to answer." />
-  <responseparam type="tolerance" default="1%" partial-range="3"/>
+  <responseparam type="tolerance" default="1%" partial_range="3"/>
 </numericalresponse>
 </problem>
