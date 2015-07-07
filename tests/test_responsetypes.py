@@ -1130,6 +1130,51 @@ class ChoiceResponseTest(ResponseTest):
         # No choice 3 exists --> mark incorrect
         self.assert_grade(problem, 'choice_3', 'incorrect')
 
+    def test_checkbox_group_partial_credit_grade(self):
+        # First: Every Decision Counts grading style
+        problem = self.build_problem(choice_type='checkbox',
+                                     choices=[False, False, True, True],
+                                     credit_type='edc')
+
+        # Check that we get the expected results
+        # (correct if and only if BOTH correct choices chosen)
+        # (partially correct if at least one choice is right)
+        # (incorrect if totally wrong)
+        self.assert_grade(problem, ['choice_0', 'choice_1'], 'incorrect')
+        self.assert_grade(problem, ['choice_2', 'choice_3'], 'correct')
+        self.assert_grade(problem, 'choice_0', 'partially-correct')
+        self.assert_grade(problem, 'choice_2', 'partially-correct')
+        self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_2', 'choice_3'], 'partially-correct')
+
+        # Second: Halves grading style
+        problem = self.build_problem(choice_type='checkbox',
+                                     choices=[False, False, True, True],
+                                     credit_type='halves')
+
+        # Check that we get the expected results
+        # (correct if and only if BOTH correct choices chosen)
+        # (partially correct on one error)
+        # (incorrect for more errors, at least with this # of choices.)
+        self.assert_grade(problem, ['choice_0', 'choice_1'], 'incorrect')
+        self.assert_grade(problem, ['choice_2', 'choice_3'], 'correct')
+        self.assert_grade(problem, 'choice_2', 'partially-correct')
+        self.assert_grade(problem, ['choice_1', 'choice_2', 'choice_3'], 'partially-correct')
+        self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_2', 'choice_3'], 'incorrect')
+
+        # Third: Halves grading style with more options
+        problem = self.build_problem(choice_type='checkbox',
+                                     choices=[False, False, True, True, False],
+                                     credit_type='halves')
+
+        # Check that we get the expected results
+        # (2 errors allowed with 5+ choices)
+        self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_4'], 'incorrect')
+        self.assert_grade(problem, ['choice_2', 'choice_3'], 'correct')
+        self.assert_grade(problem, 'choice_2', 'partially-correct')
+        self.assert_grade(problem, ['choice_1', 'choice_2', 'choice_3'], 'partially-correct')
+        self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_2', 'choice_3'], 'partially-correct')
+        self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_2', 'choice_3', 'choice_4'], 'incorrect')
+
     def test_grade_with_no_checkbox_selected(self):
         """
         Test that answer marked as incorrect if no checkbox selected.
