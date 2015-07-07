@@ -981,7 +981,7 @@ class ChoiceResponse(LoncapaResponse):
 
         # Only one type of credit at a time.
         if len(self.credit_type) > 1:
-            raise 'Only one type of partial credit is allowed for Checkbox problems.'
+            raise LoncapaProblemError('Only one type of partial credit is allowed for Checkbox problems.')
 
         # Make sure we're using an approved style.
         if self.credit_type[0] not in graders:
@@ -1307,7 +1307,7 @@ class MultipleChoiceResponse(LoncapaResponse):
 
         # Only one type of credit at a time.
         if len(self.credit_type) > 1:
-            raise 'Only one type of partial credit is allowed for Multiple Choice problems.'
+            raise LoncapaProblemError('Only one type of partial credit is allowed for Multiple Choice problems.')
 
         # Make sure we're using an approved style.
         if self.credit_type[0] not in graders:
@@ -1662,7 +1662,7 @@ class OptionResponse(LoncapaResponse):
 
         # Only one type of credit at a time.
         if len(self.credit_type) > 1:
-            raise 'Only one type of partial credit is allowed for Checkbox problems.'
+            raise LoncapaProblemError('Only one type of partial credit is allowed for Dropdown problems.')
         # Make sure we're using an approved style.
         if self.credit_type[0] not in graders:
             raise LoncapaProblemError('partial_credit attribute should be one of: ' + ','.join(graders))
