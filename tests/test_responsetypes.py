@@ -1175,6 +1175,33 @@ class ChoiceResponseTest(ResponseTest):
         self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_2', 'choice_3'], 'partially-correct')
         self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_2', 'choice_3', 'choice_4'], 'incorrect')
 
+    def test_checkbox_group_partial_points_grade(self):
+        # Ensure that we get the expected number of points
+        # Using assertAlmostEqual to avoid floating point issues
+        # First: Every Decision Counts grading style
+        problem = self.build_problem(choice_type='checkbox',
+                                     choices=[False, False, True, True],
+                                     credit_type='edc')
+
+        correct_map = problem.grade_answers({'1_2_1': 'choice_2'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.75)
+
+        # Second: Halves grading style
+        problem = self.build_problem(choice_type='checkbox',
+                                     choices=[False, False, True, True],
+                                     credit_type='halves')
+
+        correct_map = problem.grade_answers({'1_2_1': 'choice_2'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.5)
+
+        # Third: Halves grading style with more options
+        problem = self.build_problem(choice_type='checkbox',
+                                     choices=[False, False, True, True, False],
+                                     credit_type='halves')
+
+        correct_map = problem.grade_answers({'1_2_1': 'choice_2,choice4'})
+        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.25)
+
     def test_grade_with_no_checkbox_selected(self):
         """
         Test that answer marked as incorrect if no checkbox selected.
