@@ -1372,7 +1372,7 @@ class NumericalResponseTest(ResponseTest):
     # For simple things its not worth the effort.
     def test_grade_range_tolerance(self):
         problem_setup = [
-            # [given_asnwer, [list of correct responses], [list of incorrect responses]]
+            # [given_answer, [list of correct responses], [list of incorrect responses]]
             ['[5, 7)', ['5', '6', '6.999'], ['4.999', '7']],
             ['[1.6e-5, 1.9e24)', ['0.000016', '1.6*10^-5', '1.59e24'], ['1.59e-5', '1.9e24', '1.9*10^24']],
             ['[0, 1.6e-5]', ['1.6*10^-5'], ["2"]],
@@ -1381,6 +1381,41 @@ class NumericalResponseTest(ResponseTest):
         for given_answer, correct_responses, incorrect_responses in problem_setup:
             problem = self.build_problem(answer=given_answer)
             self.assert_multiple_grade(problem, correct_responses, incorrect_responses)
+
+    def test_grade_range_tolerance_partial_credit(self):
+        problem_setup = [
+            # [given_answer,
+            #   [list of correct responses],
+            #   [list of incorrect responses],
+            #   [list of partially correct responses]]
+            [
+                '[5, 7)',
+                ['5', '6', '6.999'],
+                ['0', '100'],
+                ['4', '8']
+            ],
+            [
+                '[1.6e-5, 1.9e24)',
+                ['0.000016', '1.6*10^-5', '1.59e24'],
+                ['-1e26', '1.9e26', '1.9*10^26'],
+                ['0', '2e24']
+            ],
+            [
+                '[0, 1.6e-5]',
+                ['1.6*10^-5'],
+                ['2'],
+                ['1.9e-5','-1e-6']
+            ],
+            [
+                '(1.6e-5, 10]',
+                ['2'],
+                ['-20','30'],
+                ['-1','12']
+            ],
+        ]
+        for given_answer, correct_responses, incorrect_responses, partial_responses in problem_setup:
+            problem = self.build_problem(answer=given_answer)
+            self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
 
     def test_grade_range_tolerance_exceptions(self):
         # no complex number in range tolerance staff answer
@@ -1851,7 +1886,7 @@ class CustomResponseTest(ResponseTest):
         # the check function can return a dict of the form:
         #
         # {'overall_message': STRING,
-        #  'input_list': [{'ok': BOOL or STRING, 'msg': STRING}, ...] } 
+        #  'input_list': [{'ok': BOOL or STRING, 'msg': STRING}, ...] }
         # (no grade_decimal to test it's optional)
         #
         # 'overall_message' is displayed at the end of the response
@@ -1906,7 +1941,7 @@ class CustomResponseTest(ResponseTest):
         # the check function can return a dict of the form:
         #
         # {'overall_message': STRING,
-        #  'input_list': [{'ok': BOOL or STRING, 
+        #  'input_list': [{'ok': BOOL or STRING,
         #                  'msg': STRING, 'grade_decimal': FLOAT}, ...] }
         #        #
         # 'input_list' contains dictionaries representing the correctness
