@@ -1404,17 +1404,17 @@ class NumericalResponseTest(ResponseTest):
                 '[0, 1.6e-5]',
                 ['1.6*10^-5'],
                 ['2'],
-                ['1.9e-5','-1e-6']
+                ['1.9e-5', '-1e-6']
             ],
             [
                 '(1.6e-5, 10]',
                 ['2'],
-                ['-20','30'],
-                ['-1','12']
+                ['-20', '30'],
+                ['-1', '12']
             ],
         ]
         for given_answer, correct_responses, incorrect_responses, partial_responses in problem_setup:
-            problem = self.build_problem(answer=given_answer)
+            problem = self.build_problem(answer=given_answer, credit_type='close')
             self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
 
     def test_grade_range_tolerance_exceptions(self):
