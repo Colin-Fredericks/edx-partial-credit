@@ -494,6 +494,29 @@ class OptionResponseTest(ResponseTest):
         self.assertEqual(correct_map.get_correctness('1_2_1'), 'correct')
         self.assertEqual(correct_map.get_property('1_2_1', 'answervariable'), '$a')
 
+    def test_variable_options_partial_credit(self):
+        """
+        Test that if variable are given in option response then correct map must contain answervariable value.
+        This is the partial-credit version.
+        """
+        script = textwrap.dedent("""\
+        a = 1000
+        b = a*2
+        c = a*3
+        """)
+        problem = self.build_problem(
+            options=['$a', '$b', '$c'],
+            correct_option='$a',
+            partial_option='$b',
+            script=script,
+            credit_type='points',
+        )
+
+        input_dict = {'1_2_1': '2000'}
+        correct_map = problem.grade_answers(input_dict)
+        self.assertEqual(correct_map.get_correctness('1_2_1'), 'partially-correct')
+        self.assertEqual(correct_map.get_property('1_2_1', 'answervariable'), '$b')
+
 
 class FormulaResponseTest(ResponseTest):
     """
@@ -1755,7 +1778,7 @@ class CustomResponseTest(ResponseTest):
         self.assertEqual(msg, "Message text")
         self.assertEqual(npoints, 1)
 
-        # Partial Credit answer
+        # Partially Credit answer
         input_dict = {'1_2_1': '21'}
         correct_map = problem.grade_answers(input_dict)
 
@@ -1866,9 +1889,11 @@ class CustomResponseTest(ResponseTest):
 
         correctness = correct_map.get_correctness('1_2_1')
         self.assertEqual(correctness, 'partially-correct')
+        self.assertTrue(0 <= correct_map.get_npoints('1_2_1') <= 1)
 
         correctness = correct_map.get_correctness('1_2_2')
         self.assertEqual(correctness, 'partially-correct')
+        self.assertTrue(0 <= correct_map.get_npoints('1_2_2') <= 1)
 
         # Both answers incorrect -- expect both inputs marked incorrect
         input_dict = {'1_2_1': '0', '1_2_2': '0'}
@@ -1927,7 +1952,7 @@ class CustomResponseTest(ResponseTest):
         self.assertEqual(correct_map.get_npoints('1_2_1'), 0)
         self.assertEqual(correct_map.get_npoints('1_2_2'), 1)
         self.assertEqual(correct_map.get_npoints('1_2_3'), 1)
-        self.assertTrue(0 <= correct_map.get_npoints('1_2_3') <= 1)
+        self.assertTrue(0 <= correct_map.get_npoints('1_2_4') <= 1)
 
         # Expect that we received messages for each individual input
         self.assertEqual(correct_map.get_msg('1_2_1'), 'Feedback 1')
@@ -1988,7 +2013,14 @@ class CustomResponseTest(ResponseTest):
         script = textwrap.dedent("""\
                     def check_func(expect, answer_given, options, dynamath):
                         assert options == "xyzzy", "Options was %r" % options
-                        return {'ok': answer_given == expect, 'msg': 'Message text'}
+                        partial_credit = '21'
+                        if answer_given == expect:
+                            retval = True
+                        elif answer_given == partial_credit:
+                            retval = 'partial'
+                        else:
+                            retval = False
+                        return {'ok': retval, 'msg': 'Message text'}
                     """)
 
         problem = self.build_problem(script=script, cfn="check_func", expect="42", options="xyzzy", cfn_extra_args="options dynamath")
@@ -2001,6 +2033,16 @@ class CustomResponseTest(ResponseTest):
         msg = correct_map.get_msg('1_2_1')
 
         self.assertEqual(correctness, 'correct')
+        self.assertEqual(msg, "Message text")
+
+        # Partially Correct answer
+        input_dict = {'1_2_1': '21'}
+        correct_map = problem.grade_answers(input_dict)
+
+        correctness = correct_map.get_correctness('1_2_1')
+        msg = correct_map.get_msg('1_2_1')
+
+        self.assertEqual(correctness, 'partially-correct')
         self.assertEqual(msg, "Message text")
 
         # Incorrect answer
@@ -2029,7 +2071,7 @@ class CustomResponseTest(ResponseTest):
                 check1 = (int(answer_given[0]) == 1)
                 check2 = (int(answer_given[1]) == 2)
                 check3 = (int(answer_given[2]) == 3)
-                if int(answer_given[0]) == -1:
+                if (int(answer_given[0]) == -1) and check2 and check3:
                     return {'ok': 'partial',
                             'msg': 'Message text'}
                 else:
@@ -2053,7 +2095,7 @@ class CustomResponseTest(ResponseTest):
         input_dict = {'1_2_1': '-1', '1_2_2': '2', '1_2_3': '3'}
         correct_map = problem.grade_answers(input_dict)
 
-        # Everything marked incorrect
+        # Everything marked partially correct
         self.assertEqual(correct_map.get_correctness('1_2_1'), 'partially-correct')
         self.assertEqual(correct_map.get_correctness('1_2_2'), 'partially-correct')
         self.assertEqual(correct_map.get_correctness('1_2_3'), 'partially-correct')
