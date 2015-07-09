@@ -2496,7 +2496,7 @@ class CustomResponse(LoncapaResponse):
             else:
                 if correct[k] == 'correct':
                     npoints = max_points
-                elif correct[k] == 'partially_correct':
+                elif correct[k] == 'partially-correct':
                     npoints = max_points * self.default_pc
                 else:
                     npoints = 0
@@ -2579,7 +2579,7 @@ class CustomResponse(LoncapaResponse):
                     else:
                         if correct[0] == 'correct':
                             decimal = 1.0
-                        elif correct[0] == 'partially_correct':
+                        elif correct[0] == 'partially-correct':
                             decimal = self.default_pc
                         else:
                             decimal = 0.0
@@ -2634,7 +2634,7 @@ class CustomResponse(LoncapaResponse):
                         if 'grade_decimal' in input_dict:
                             decimal = input_dict['grade_decimal']
                         else:
-                            if input_dict['ok']:
+                            if str(input_dict['ok']).lower().strip() == 'true':
                                 decimal = 1.0
                             elif 'partial' in str(input_dict['ok']).lower().strip():
                                 decimal = self.default_pc
