@@ -234,7 +234,8 @@ class NumericalResponseXMLFactory(ResponseXMLFactory):
                 responseparam_element.set('partial_range', str(partial_range))
 
         if partial_answers is not None and 'list' in credit_type:
-            responseparam_element = etree.SubElement(response_element, 'responseparam')
+            # The line below throws a false positive pylint violation, so it's excepted.
+            responseparam_element = etree.SubElement(response_element, 'responseparam')  # pylint: disable=E1101
             responseparam_element.set('partial_answers', partial_answers)
 
         return response_element
