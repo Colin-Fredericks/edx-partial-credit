@@ -89,7 +89,7 @@ class ResponseXMLFactory(object):
             # Add input elements
             for __ in range(int(num_inputs)):
                 input_element = self.create_input_element(**kwargs)
-                if not (None == input_element):
+                if not None == input_element:
                     response_element.append(input_element)
 
             # The problem has an explanation of the solution
@@ -160,7 +160,7 @@ class ResponseXMLFactory(object):
         points = kwargs.get('points', [None] * len(choices))
 
         # Create the <choicegroup>, <checkboxgroup>, or <radiogroup> element
-        assert(choice_type in group_element_names)
+        assert choice_type in group_element_names
         group_element = etree.Element(group_element_names[choice_type])
 
         # Create the <choice> elements
@@ -456,8 +456,8 @@ class FormulaResponseXMLFactory(ResponseXMLFactory):
         answer = kwargs.get("answer", None)
         hint_list = kwargs.get("hints", None)
 
-        assert(answer)
-        assert(sample_dict and num_samples)
+        assert answer
+        assert sample_dict and num_samples
 
         # Create the <formularesponse> element
         response_element = etree.Element("formularesponse")
@@ -562,7 +562,7 @@ class ImageResponseXMLFactory(ResponseXMLFactory):
         rectangle = kwargs.get('rectangle', None)
         regions = kwargs.get('regions', None)
 
-        assert(rectangle or regions)
+        assert rectangle or regions
 
         # Create the <imageinput> element
         input_element = etree.Element("imageinput")
@@ -688,8 +688,8 @@ class OptionResponseXMLFactory(ResponseXMLFactory):
         point_values = kwargs.get('point_values', None)
         credit_type = kwargs.get('credit_type', None)
 
-        assert(options_list and correct_option)
-        assert(len(options_list) > 1)
+        assert options_list and correct_option
+        assert len(options_list) > 1
         for option in correct_option.split(','):
             assert option.strip() in options_list
 
