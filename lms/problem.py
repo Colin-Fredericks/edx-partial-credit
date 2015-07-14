@@ -68,6 +68,18 @@ class ProblemPage(PageObject):
         """
         return self.q(css="div.problem div.capa_inputtype.textline div.correct p.status").is_present()
 
+    def is_partially_correct(self):
+        """
+        Is there a "partially correct" status showing?
+        """
+        return self.q(css="div.problem div.capa_inputtype.textline div.partially-correct p.status").is_present()
+
+    def is_incorrect(self):
+        """
+        Is there an "incorrect" status showing?
+        """
+        return self.q(css="div.problem div.capa_inputtype.textline div.incorrect p.status").is_present()
+
     def click_clarification(self, index=0):
         """
         Click on an inline icon that can be included in problem text using an HTML <clarification> element:

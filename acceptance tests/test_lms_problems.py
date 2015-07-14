@@ -190,11 +190,7 @@ class ProblemPartialCredit(ProblemsTest):
         self.courseware_page.visit()
         problem_page = ProblemPage(self.browser)
         self.assertEqual(problem_page.problem_name, 'PARTIAL CREDIT TEST PROBLEM')
-        problem_page.click_clarification(0)
-        self.assertIn('"Example PV Installation Costs"', problem_page.visible_tooltip_text)
-        problem_page.click_clarification(1)
-        tooltip_text = problem_page.visible_tooltip_text
-        self.assertIn('Return on Investment', tooltip_text)
-        self.assertIn('per year', tooltip_text)
-        self.assertNotIn('strong', tooltip_text)
-
+        problem_page.fill_answer('-1')
+        problem_page.click_check()
+        self.assertTrue(problem_page.is_partially_correct())
+        
