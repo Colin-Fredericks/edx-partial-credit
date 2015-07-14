@@ -152,9 +152,11 @@ class MultiChoiceResponseTest(ResponseTest):
             problem.grade_answers(input_dict)
 
     def test_partial_points_multiple_choice_grade(self):
-        problem = self.build_problem(choices=['partial', 'partial', 'partial'],
-                                     credit_type='points',
-                                     points=['1', '0.6', '0'])
+        problem = self.build_problem(
+            choices=['partial', 'partial', 'partial'],
+            credit_type='points',
+            points=['1', '0.6', '0']
+        )
 
         # Ensure that we get the expected number of points
         # Using assertAlmostEqual to avoid floating point issues
@@ -403,8 +405,10 @@ class OptionResponseTest(ResponseTest):
         self.assert_grade(problem, "invalid_option", "incorrect")
 
     def test_grade_multiple_correct(self):
-        problem = self.build_problem(options=["first", "second", "third"],
-                                     correct_option="second,third")
+        problem = self.build_problem(
+            options=["first", "second", "third"],
+            correct_option="second,third"
+        )
 
         # Assert that we get the expected grades
         self.assert_grade(problem, "first", "incorrect")
@@ -413,10 +417,12 @@ class OptionResponseTest(ResponseTest):
 
     def test_grade_partial_credit(self):
         # Testing the "points" style.
-        problem = self.build_problem(options=["first", "second", "third"],
-                                     correct_option="second",
-                                     credit_type="points",
-                                     partial_option="third")
+        problem = self.build_problem(
+            options=["first", "second", "third"],
+            correct_option="second",
+            credit_type="points",
+            partial_option="third"
+        )
 
         # Assert that we get the expected grades
         self.assert_grade(problem, "first", "incorrect")
@@ -425,11 +431,13 @@ class OptionResponseTest(ResponseTest):
 
     def test_grade_partial_credit_with_points(self):
         # Testing the "points" style with specified point values.
-        problem = self.build_problem(options=["first", "second", "third"],
-                                     correct_option="second",
-                                     credit_type="points",
-                                     partial_option="third",
-                                     point_values="0.3")
+        problem = self.build_problem(
+            options=["first", "second", "third"],
+            correct_option="second",
+            credit_type="points",
+            partial_option="third",
+            point_values="0.3"
+        )
 
         # Assert that we get the expected grades and scores
         self.assert_grade(problem, "first", "incorrect")
@@ -446,19 +454,23 @@ class OptionResponseTest(ResponseTest):
 
     def test_grade_partial_credit_valid_scheme(self):
         # Only one type of partial credit currently allowed.
-        problem = self.build_problem(options=["first", "second", "third"],
-                                     correct_option="second",
-                                     credit_type="points,points",
-                                     partial_option="third")
+        problem = self.build_problem(
+            options=["first", "second", "third"],
+            correct_option="second",
+            credit_type="points,points",
+            partial_option="third"
+        )
         with self.assertRaises(LoncapaProblemError):
             input_dict = {'1_2_1': 'second'}
             problem.grade_answers(input_dict)
 
         # 'bongo' is not a valid grading scheme.
-        problem = self.build_problem(options=["first", "second", "third"],
-                                     correct_option="second",
-                                     credit_type="bongo",
-                                     partial_option="third")
+        problem = self.build_problem(
+            options=["first", "second", "third"],
+            correct_option="second",
+            credit_type="bongo",
+            partial_option="third"
+        )
         with self.assertRaises(LoncapaProblemError):
             input_dict = {'1_2_1': 'second'}
             problem.grade_answers(input_dict)
@@ -1248,26 +1260,32 @@ class ChoiceResponseTest(ResponseTest):
     def test_checkbox_group_valid_grading_schemes(self):
         # Checkbox-type problems only allow one partial credit scheme.
         # Change this test if that changes.
-        problem = self.build_problem(choice_type='checkbox',
-                                     choices=[False, False, True, True],
-                                     credit_type='edc,halves,bongo')
+        problem = self.build_problem(
+            choice_type='checkbox',
+            choices=[False, False, True, True],
+            credit_type='edc,halves,bongo'
+        )
         with self.assertRaises(LoncapaProblemError):
             input_dict = {'1_2_1': 'choice_1'}
             problem.grade_answers(input_dict)
 
         # 'bongo' is not a valid grading scheme.
-        problem = self.build_problem(choice_type='checkbox',
-                                     choices=[False, False, True, True],
-                                     credit_type='bongo')
+        problem = self.build_problem(
+            choice_type='checkbox',
+            choices=[False, False, True, True],
+            credit_type='bongo'
+        )
         with self.assertRaises(LoncapaProblemError):
             input_dict = {'1_2_1': 'choice_1'}
             problem.grade_answers(input_dict)
 
     def test_checkbox_group_partial_credit_grade(self):
         # First: Every Decision Counts grading style
-        problem = self.build_problem(choice_type='checkbox',
-                                     choices=[False, False, True, True],
-                                     credit_type='edc')
+        problem = self.build_problem(
+            choice_type='checkbox',
+            choices=[False, False, True, True],
+            credit_type='edc'
+        )
 
         # Check that we get the expected results
         # (correct if and only if BOTH correct choices chosen)
@@ -1280,9 +1298,11 @@ class ChoiceResponseTest(ResponseTest):
         self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_2', 'choice_3'], 'partially-correct')
 
         # Second: Halves grading style
-        problem = self.build_problem(choice_type='checkbox',
-                                     choices=[False, False, True, True],
-                                     credit_type='halves')
+        problem = self.build_problem(
+            choice_type='checkbox',
+            choices=[False, False, True, True],
+            credit_type='halves'
+        )
 
         # Check that we get the expected results
         # (correct if and only if BOTH correct choices chosen)
@@ -1295,9 +1315,11 @@ class ChoiceResponseTest(ResponseTest):
         self.assert_grade(problem, ['choice_0', 'choice_1', 'choice_2', 'choice_3'], 'incorrect')
 
         # Third: Halves grading style with more options
-        problem = self.build_problem(choice_type='checkbox',
-                                     choices=[False, False, True, True, False],
-                                     credit_type='halves')
+        problem = self.build_problem(
+            choice_type='checkbox',
+            choices=[False, False, True, True, False],
+            credit_type='halves'
+        )
 
         # Check that we get the expected results
         # (2 errors allowed with 5+ choices)
@@ -1312,25 +1334,31 @@ class ChoiceResponseTest(ResponseTest):
         # Ensure that we get the expected number of points
         # Using assertAlmostEqual to avoid floating point issues
         # First: Every Decision Counts grading style
-        problem = self.build_problem(choice_type='checkbox',
-                                     choices=[False, False, True, True],
-                                     credit_type='edc')
+        problem = self.build_problem(
+            choice_type='checkbox',
+            choices=[False, False, True, True],
+            credit_type='edc'
+        )
 
         correct_map = problem.grade_answers({'1_2_1': 'choice_2'})
         self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.75)
 
         # Second: Halves grading style
-        problem = self.build_problem(choice_type='checkbox',
-                                     choices=[False, False, True, True],
-                                     credit_type='halves')
+        problem = self.build_problem(
+            choice_type='checkbox',
+            choices=[False, False, True, True],
+            credit_type='halves'
+        )
 
         correct_map = problem.grade_answers({'1_2_1': 'choice_2'})
         self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.5)
 
         # Third: Halves grading style with more options
-        problem = self.build_problem(choice_type='checkbox',
-                                     choices=[False, False, True, True, False],
-                                     credit_type='halves')
+        problem = self.build_problem(
+            choice_type='checkbox',
+            choices=[False, False, True, True, False],
+            credit_type='halves'
+        )
 
         correct_map = problem.grade_answers({'1_2_1': 'choice_2,choice4'})
         self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.25)
@@ -1479,39 +1507,47 @@ class NumericalResponseTest(ResponseTest):
 
     def test_grade_partial(self):
         # First: "list"-style grading scheme.
-        problem = self.build_problem(answer=4,
-                                     credit_type='list',
-                                     partial_answers='2,8,-4')
+        problem = self.build_problem(
+            answer=4,
+            credit_type='list',
+            partial_answers='2,8,-4'
+        )
         correct_responses = ["4", "4.0"]
         incorrect_responses = ["1", "3", "4.1", "0", "-2"]
         partial_responses = ["2", "2.0", "-4", "-4.0", "8", "8.0"]
         self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
 
         # Second: "close"-style grading scheme. Default range is twice tolerance.
-        problem = self.build_problem(answer=4,
-                                     tolerance=0.2,
-                                     credit_type='close')
+        problem = self.build_problem(
+            answer=4,
+            tolerance=0.2,
+            credit_type='close'
+        )
         correct_responses = ["4", "4.1", "3.9"]
         incorrect_responses = ["1", "3", "4.5", "0", "-2"]
         partial_responses = ["4.3", "3.7"]
         self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
 
         # Third: "close"-style grading scheme with partial_range set.
-        problem = self.build_problem(answer=4,
-                                     tolerance=0.2,
-                                     partial_range=3,
-                                     credit_type='close')
+        problem = self.build_problem(
+            answer=4,
+            tolerance=0.2,
+            partial_range=3,
+            credit_type='close'
+        )
         correct_responses = ["4", "4.1"]
         incorrect_responses = ["1", "3", "0", "-2"]
         partial_responses = ["4.5", "3.5"]
         self.assert_multiple_partial(problem, correct_responses, incorrect_responses, partial_responses)
 
         # Fourth: both "list"- and "close"-style grading schemes at once.
-        problem = self.build_problem(answer=4,
-                                     tolerance=0.2,
-                                     partial_range=3,
-                                     credit_type='close,list',
-                                     partial_answers='2,8,-4')
+        problem = self.build_problem(
+            answer=4,
+            tolerance=0.2,
+            partial_range=3,
+            credit_type='close,list',
+            partial_answers='2,8,-4'
+        )
         correct_responses = ["4", "4.0"]
         incorrect_responses = ["1", "3", "0", "-2"]
         partial_responses = ["2", "2.1", "1.5", "8", "7.5", "8.1", "-4", "-4.15", "-3.5", "4.5", "3.5"]
