@@ -183,14 +183,13 @@ class ProblemPartialCredit(ProblemsTest):
         """)
         return XBlockFixtureDesc('problem', 'PARTIAL CREDIT TEST PROBLEM', data=xml)
 
-    def test_clarification(self):
+    def test_partial_credit(self):
         """
         Test that we can see the partial credit value and feedback.
         """
         self.courseware_page.visit()
         problem_page = ProblemPage(self.browser)
         self.assertEqual(problem_page.problem_name, 'PARTIAL CREDIT TEST PROBLEM')
-        problem_page.fill_answer('-1')
+        problem_page.fill_answer('1')
         problem_page.click_check()
-        self.assertTrue(problem_page.is_partially_correct())
-        
+        self.assertTrue(problem_page.is_correct())
