@@ -10,3 +10,5 @@ templates alias
 tests alias
 
 lms alias (tests)
+
+acceptance tests alias
