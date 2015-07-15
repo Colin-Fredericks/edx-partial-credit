@@ -174,7 +174,7 @@ class ProblemPartialCredit(ProblemsTest):
         xml = dedent("""
             <problem>
                 <p>The answer is 1. Partial credit for -1.</p>
-                <numericalresponse answer="1" partial-credit="list">
+                <numericalresponse answer="1" partial_credit="list">
                     <formulaequationinput label="How many miles away from Earth is the sun? Use scientific notation to answer." />
                     <responseparam type="tolerance" default="0.01" />
                     <responseparam partial_answers="-1" />
@@ -190,6 +190,6 @@ class ProblemPartialCredit(ProblemsTest):
         self.courseware_page.visit()
         problem_page = ProblemPage(self.browser)
         self.assertEqual(problem_page.problem_name, 'PARTIAL CREDIT TEST PROBLEM')
-        problem_page.fill_answer('1')
+        problem_page.fill_answer('-1')
         problem_page.click_check()
-        self.assertTrue(problem_page.is_correct())
+        self.assertTrue(problem_page.is_partially_correct())
