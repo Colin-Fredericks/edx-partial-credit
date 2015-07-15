@@ -190,6 +190,6 @@ class ProblemPartialCredit(ProblemsTest):
         self.courseware_page.visit()
         problem_page = ProblemPage(self.browser)
         self.assertEqual(problem_page.problem_name, 'PARTIAL CREDIT TEST PROBLEM')
-        problem_page.fill_answer('-1')
+        problem_page.fill_answer_numerical('-1')
         problem_page.click_check()
-        self.assertTrue(problem_page.is_partially_correct())
+        self.assertTrue(problem_page.simpleprob_is_partially_correct())
