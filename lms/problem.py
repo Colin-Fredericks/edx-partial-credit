@@ -72,11 +72,11 @@ class ProblemPage(PageObject):
         """
         Is there a "correct" status showing?
         """
-        return self.q(css="div.problem div.inputtype.textline div.correct p.status").is_present()
+        return self.q(css="div.problem div.capa_inputtype.textline div.correct span.status").is_present()
 
     def simpleprob_is_correct(self):
         """
-        Is there a "partially correct" status showing? Works with simple problem types.
+        Is there a "correct" status showing? Works with simple problem types.
         """
         return self.q(css="div.problem section.inputtype div.correct span.status").is_present()
 
@@ -88,7 +88,7 @@ class ProblemPage(PageObject):
 
     def simpleprob_is_incorrect(self):
         """
-        Is there a "partially correct" status showing? Works with simple problem types.
+        Is there an "incorrect" status showing? Works with simple problem types.
         """
         return self.q(css="div.problem section.inputtype div.incorrect span.status").is_present()
 
