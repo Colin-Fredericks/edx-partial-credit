@@ -48,6 +48,12 @@ class ProblemPage(PageObject):
         """
         self.q(css='div.problem div.capa_inputtype.textline input').fill(text)
 
+    def fill_answer_numerical(self, text):
+        """
+        Fill in the answer to a numerical problem.
+        """
+        self.q(css='div.problem section.inputtype input').fill(text)
+
     def click_check(self):
         """
         Click the Check button!
@@ -66,19 +72,25 @@ class ProblemPage(PageObject):
         """
         Is there a "correct" status showing?
         """
-        return self.q(css="div.problem div.capa_inputtype.textline div.correct p.status").is_present()
+        return self.q(css="div.problem div.inputtype.textline div.correct p.status").is_present()
 
-    def is_partially_correct(self):
+    def simpleprob_is_correct(self):
         """
-        Is there a "partially correct" status showing?
+        Is there a "partially correct" status showing? Works with simple problem types.
         """
-        return self.q(css="div.problem div.capa_inputtype.textline div.partially-correct p.status").is_present()
+        return self.q(css="div.problem section.inputtype div.correct span.status").is_present()
 
-    def is_incorrect(self):
+    def simpleprob_is_partially_correct(self):
         """
-        Is there an "incorrect" status showing?
+        Is there a "partially correct" status showing? Works with simple problem types.
         """
-        return self.q(css="div.problem div.capa_inputtype.textline div.incorrect p.status").is_present()
+        return self.q(css="div.problem section.inputtype div.partially-correct span.status").is_present()
+
+    def simpleprob_is_incorrect(self):
+        """
+        Is there a "partially correct" status showing? Works with simple problem types.
+        """
+        return self.q(css="div.problem section.inputtype div.incorrect span.status").is_present()
 
     def click_clarification(self, index=0):
         """
