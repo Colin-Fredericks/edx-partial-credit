@@ -95,6 +95,7 @@ class Status(object):
             # Translators: these are tooltips that indicate the state of an assessment question
             'correct': _('This is correct.'),
             'incorrect': _('This is incorrect.'),
+            'partially-correct': _('This is partially correct.'),
             'unanswered': _('This is unanswered.'),
             'unsubmitted': _('This is unanswered.'),
             'queued': _('This is being processed.'),
