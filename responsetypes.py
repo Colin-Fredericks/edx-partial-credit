@@ -859,7 +859,10 @@ class ChoiceResponse(LoncapaResponse):
         Calculates partial credit on the Every Decision Counts scheme.
         For each correctly selected or correctly blank choice, score 1 point.
         Divide by total number of choices.
-        Arguments: all_choices, student_answer, student_non_answers
+        Arguments:
+            all_choices, the full set of checkboxes
+            student_answer, what the student actually chose
+            student_non_answers, what the student didn't choose
         Returns a CorrectMap.
         """
 
@@ -890,7 +893,10 @@ class ChoiceResponse(LoncapaResponse):
         If one error, half credit as long as there are 3+ choices
         If two errors, 1/4 credit as long as there are 5+ choices
         (If not enough choices, no credit.)
-        Arguments: all_choices, student_answer, student_non_answers
+        Arguments:
+            all_choices, the full set of checkboxes
+            student_answer, what the student actually chose
+            student_non_answers, what the student didn't choose
         Returns a CorrectMap
         """
 
@@ -920,7 +926,7 @@ class ChoiceResponse(LoncapaResponse):
         """
         Standard grading for checkbox problems.
         100% credit if all choices are correct; 0% otherwise
-        Arguments: student_answer
+        Arguments: student_answer, which is the items the student actually chose
         """
 
         student_answer = kwargs['student_answer']
@@ -937,10 +943,10 @@ class ChoiceResponse(LoncapaResponse):
 
     def get_score(self, student_answers):
 
-        # Setting up answer lists:
-        #  all_choices: the full list of checkboxes
+        # Setting up answer sets:
+        #  all_choices: the full set of checkboxes
         #  student_answer: what the student actually chose (note no "s")
-        #  student_non_answer: what they didn't choose
+        #  student_non_answers: what they didn't choose
         #  self.correct_choices: boxes that should be checked
         #  self.incorrect_choices: boxes that should NOT be checked
 
@@ -951,8 +957,10 @@ class ChoiceResponse(LoncapaResponse):
         if not isinstance(student_answer, list):
             student_answer = [student_answer]
 
-        # "None apply" should really be a valid choice for "check all that apply",
-        # but score feedback is broken when no boxes are marked.
+        # When a student leaves all the boxes unmarked, edX throws an error.
+        # This line checks for blank answers so that we can throw "false".
+        # This is not ideal. "None apply" should be a valid choice.
+        # Sadly, this is not the place where we can fix that problem.
         empty_answer = student_answer == []
 
         if empty_answer:
