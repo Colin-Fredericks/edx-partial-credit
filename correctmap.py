@@ -115,7 +115,7 @@ class CorrectMap(object):
         Returns true if the problem is partially correct.
         """
         if answer_id in self.cmap:
-            return self.cmap[answer_id]['correctness'] in ['partially-correct']
+            return self.cmap[answer_id]['correctness'] == 'partially-correct'
         return None
 
     def is_queued(self, answer_id):
