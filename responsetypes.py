@@ -1612,6 +1612,11 @@ class OptionResponse(LoncapaResponse):
             partial_map = problem_map['partial']
             points_map = problem_map['point_values']
 
+            # Make sure we have enough point values; add default 50% if not.
+            if len(points_map) < len(partial_map):
+                diffmap = [0.5] * (len(partial_map) - len(points_map))
+                partial_map = partial_map + diffmap
+
             if not cmap.is_correct(aid) and partial_map[aid] is not None:
                 for index, word in enumerate(partial_map[aid]):
                     # Set the correctness and point value
