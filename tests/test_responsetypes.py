@@ -417,66 +417,6 @@ class OptionResponseTest(ResponseTest):
         self.assert_grade(problem, "second", "correct")
         self.assert_grade(problem, "third", "correct")
 
-    def test_grade_partial_credit(self):
-        # Testing the "points" style.
-        problem = self.build_problem(
-            options=["first", "second", "third"],
-            correct_option="second",
-            credit_type="points",
-            partial_option="third"
-        )
-
-        # Assert that we get the expected grades
-        self.assert_grade(problem, "first", "incorrect")
-        self.assert_grade(problem, "second", "correct")
-        self.assert_grade(problem, "third", "partially-correct")
-
-    def test_grade_partial_credit_with_points(self):
-        # Testing the "points" style with specified point values.
-        problem = self.build_problem(
-            options=["first", "second", "third"],
-            correct_option="second",
-            credit_type="points",
-            partial_option="third",
-            point_values="0.3"
-        )
-
-        # Assert that we get the expected grades and scores
-        self.assert_grade(problem, "first", "incorrect")
-        correct_map = problem.grade_answers({'1_2_1': 'first'})
-        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0)
-
-        self.assert_grade(problem, "second", "correct")
-        correct_map = problem.grade_answers({'1_2_1': 'second'})
-        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 1)
-
-        self.assert_grade(problem, "third", "partially-correct")
-        correct_map = problem.grade_answers({'1_2_1': 'third'})
-        self.assertAlmostEqual(correct_map.get_npoints('1_2_1'), 0.3)
-
-    def test_grade_partial_credit_valid_scheme(self):
-        # Only one type of partial credit currently allowed.
-        problem = self.build_problem(
-            options=["first", "second", "third"],
-            correct_option="second",
-            credit_type="points,points",
-            partial_option="third"
-        )
-        with self.assertRaises(LoncapaProblemError):
-            input_dict = {'1_2_1': 'second'}
-            problem.grade_answers(input_dict)
-
-        # 'bongo' is not a valid grading scheme.
-        problem = self.build_problem(
-            options=["first", "second", "third"],
-            correct_option="second",
-            credit_type="bongo",
-            partial_option="third"
-        )
-        with self.assertRaises(LoncapaProblemError):
-            input_dict = {'1_2_1': 'second'}
-            problem.grade_answers(input_dict)
-
     def test_quote_option(self):
         # Test that option response properly escapes quotes inside options strings
         problem = self.build_problem(
@@ -509,29 +449,6 @@ class OptionResponseTest(ResponseTest):
         correct_map = problem.grade_answers(input_dict)
         self.assertEqual(correct_map.get_correctness('1_2_1'), 'correct')
         self.assertEqual(correct_map.get_property('1_2_1', 'answervariable'), '$a')
-
-    def test_variable_options_partial_credit(self):
-        """
-        Test that if variable are given in option response then correct map must contain answervariable value.
-        This is the partial-credit version.
-        """
-        script = textwrap.dedent("""\
-        a = 1000
-        b = a*2
-        c = a*3
-        """)
-        problem = self.build_problem(
-            options=['$a', '$b', '$c'],
-            correct_option='$a',
-            partial_option='$b',
-            script=script,
-            credit_type='points',
-        )
-
-        input_dict = {'1_2_1': '2000'}
-        correct_map = problem.grade_answers(input_dict)
-        self.assertEqual(correct_map.get_correctness('1_2_1'), 'partially-correct')
-        self.assertEqual(correct_map.get_property('1_2_1', 'answervariable'), '$b')
 
 
 class FormulaResponseTest(ResponseTest):
