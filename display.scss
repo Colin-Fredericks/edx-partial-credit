@@ -17,6 +17,7 @@
 // * +Problem - Annotation
 // * +Problem - Choice Text Group
 // * +Problem - Image Input Overrides
+// * +Problem - Annotation Problem Overrides
 
 // +Variables - Capa
 // ====================
@@ -180,7 +181,7 @@ div.problem {
       }
 
       &.choicegroup_partially-correct {
-        @include status-icon($partiallycorrect, "\f00c");
+        @include status-icon($partiallycorrect, "\f069");
         border: 2px solid $partiallycorrect;
 
         // keep green for correct answers on hover. 
@@ -244,7 +245,7 @@ div.problem {
 
       // CASE: partially correct answer
       &.partially-correct {
-        @include status-icon($partiallycorrect, "\f00c");
+        @include status-icon($partiallycorrect, "\f069");
       }
 
       // CASE: incorrect answer
@@ -769,13 +770,13 @@ div.problem {
 
     // CASE: partially correct answer
     > .partially-correct {
-      
-      input { 
-        border: 2px solid $partiallycorrect;
+
+      input {
+        border: 2px solid $partialcorrect;
       }
 
       .status {
-        @include status-icon($partiallycorrect, "\f00c");
+        @include status-icon($partialcorrect, "\f069");
       }
     }
 
@@ -1445,10 +1446,44 @@ div.problem .imageinput.capa_inputtype {
     width: 25px;
     height: 20px;
   }
+
   .correct {
     background: url('../images/correct-icon.png') center center no-repeat;
   }
+
   .incorrect {
     background: url('../images/incorrect-icon.png') center center no-repeat;
   }
+
+  .partially-correct {
+    background: url('../images/partially-correct-icon.png') center center no-repeat;
+  }
 }
+
+// +Problem - Annotation Problem Overrides
+// ====================
+
+// NOTE: temporary override until annotation problem inputs use same base html structure as other common capa input types.
+div.problem .annotation-input {
+
+  .tag-status {
+    display: inline-block;
+    position: relative;
+    top: 3px;
+    width: 25px;
+    height: 20px;
+  }
+
+  .correct {
+    background: url('../images/correct-icon.png') center center no-repeat;
+  }
+
+  .incorrect {
+    background: url('../images/incorrect-icon.png') center center no-repeat;
+  }
+
+  .partially-correct {
+    background: url('../images/partially-correct-icon.png') center center no-repeat;
+  }
+}
+
