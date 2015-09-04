@@ -673,15 +673,25 @@ class OptionResponseXMLFactory(ResponseXMLFactory):
 
         *options*: a list of possible options the user can choose from [REQUIRED]
                     You must specify at least 2 options.
-        *correct_option*: the correct choice from the list of options [REQUIRED]
+        *correct_option*: a string with comma-separated correct choices [REQUIRED]
+        *partial_option*: a string with comma-separated partially-correct choices
+        *point_values*: a string with comma-separated values (0-1) that give the
+            partial credit values in the "points" grading scheme.
+            Must have one per partial option.
+        *credit_type*: String of comma-separated words specifying the
+            partial credit grading scheme.
         """
 
         options_list = kwargs.get('options', None)
         correct_option = kwargs.get('correct_option', None)
+        partial_option = kwargs.get('partial_option', None)
+        point_values = kwargs.get('point_values', None)
+        credit_type = kwargs.get('credit_type', None)
 
         assert options_list and correct_option
         assert len(options_list) > 1
-        assert correct_option in options_list
+        for option in correct_option.split(','):
+            assert option.strip() in options_list
 
         # Create the <optioninput> element
         optioninput_element = etree.Element("optioninput")
@@ -694,6 +704,15 @@ class OptionResponseXMLFactory(ResponseXMLFactory):
 
         # Set the "correct" attribute
         optioninput_element.set('correct', str(correct_option))
+
+        # If we have 'points'-style partial credit...
+        if 'points' in str(credit_type):
+            # Set the "partial" attribute
+            optioninput_element.set('partial', str(partial_option))
+
+            # Set the "point_values" attribute, if it's specified.
+            if point_values is not None:
+                optioninput_element.set('point_values', str(point_values))
 
         return optioninput_element
 

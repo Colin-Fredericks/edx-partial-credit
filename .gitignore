@@ -12,3 +12,27 @@ tests alias
 lms alias (tests)
 
 acceptance tests alias
+
+acceptance tests devstack
+
+acceptance tests platform
+
+capa devstack
+
+capa platform
+
+css devstack
+
+css platform
+
+lms tests devstack
+
+lms tests platform
+
+tests devstack
+
+tests platform
+
+templates platform
+
+templates devstack

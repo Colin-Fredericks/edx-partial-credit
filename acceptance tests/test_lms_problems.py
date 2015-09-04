@@ -5,6 +5,7 @@ Bok choy acceptance tests for problems in the LMS
 See also old lettuce tests in lms/djangoapps/courseware/features/problems.feature
 """
 from textwrap import dedent
+from flaky import flaky
 
 from ..helpers import UniqueCourseTest
 from ...pages.studio.auto_auth import AutoAuthPage
@@ -162,6 +163,92 @@ class ProblemExtendedHintTest(ProblemsTest, EventsTestMixin):
                 {'event': {u'hint_index': 0, u'hint_len': 2, u'hint_text': u'demand-hint1'}},
                 {'event': {u'hint_index': 1, u'hint_len': 2, u'hint_text': u'demand-hint2'}},
                 {'event': {u'hint_index': 0, u'hint_len': 2, u'hint_text': u'demand-hint1'}}
+            ],
+            actual_events)
+
+
+class ProblemHintWithHtmlTest(ProblemsTest, EventsTestMixin):
+    """
+    Tests that hints containing html get rendered properly
+    """
+
+    def get_problem(self):
+        """
+        Problem with extended hint features.
+        """
+        xml = dedent("""
+            <problem>
+            <p>question text</p>
+            <stringresponse answer="A">
+                <stringequalhint answer="B">aa <a href="#">bb</a> cc</stringequalhint>
+                <stringequalhint answer="C"><a href="#">aa bb</a> cc</stringequalhint>
+                <textline size="20"/>
+            </stringresponse>
+            <demandhint>
+              <hint>aa <a href="#">bb</a> cc</hint>
+              <hint><a href="#">dd  ee</a> ff</hint>
+            </demandhint>
+            </problem>
+        """)
+        return XBlockFixtureDesc('problem', 'PROBLEM HTML HINT TEST', data=xml)
+
+    @flaky  # TODO fix this, see TNL-3183
+    def test_check_hint(self):
+        """
+        Test clicking Check shows the extended hint in the problem message.
+        """
+        self.courseware_page.visit()
+        problem_page = ProblemPage(self.browser)
+        self.assertEqual(problem_page.problem_text[0], u'question text')
+        problem_page.fill_answer('B')
+        problem_page.click_check()
+        self.assertEqual(problem_page.message_text, u'Incorrect: aa bb cc')
+        problem_page.fill_answer('C')
+        problem_page.click_check()
+        self.assertEqual(problem_page.message_text, u'Incorrect: aa bb cc')
+        # Check for corresponding tracking event
+        actual_events = self.wait_for_events(
+            event_filter={'event_type': 'edx.problem.hint.feedback_displayed'},
+            number_of_matches=2
+        )
+        self.assert_events_match(
+            [{'event': {'hint_label': u'Incorrect',
+                        'trigger_type': 'single',
+                        'student_answer': [u'B'],
+                        'correctness': False,
+                        'question_type': 'stringresponse',
+                        'hints': [{'text': 'aa <a href="#">bb</a> cc'}]}},
+             {'event': {'hint_label': u'Incorrect',
+                        'trigger_type': 'single',
+                        'student_answer': [u'C'],
+                        'correctness': False,
+                        'question_type': 'stringresponse',
+                        'hints': [{'text': '<a href="#">aa bb</a> cc'}]}}],
+            actual_events)
+
+    def test_demand_hint(self):
+        """
+        Test clicking hint button shows the demand hint in its div.
+        """
+        self.courseware_page.visit()
+        problem_page = ProblemPage(self.browser)
+        # The hint button rotates through multiple hints
+        problem_page.click_hint()
+        self.assertEqual(problem_page.hint_text, u'Hint (1 of 2): aa bb cc')
+        problem_page.click_hint()
+        self.assertEqual(problem_page.hint_text, u'Hint (2 of 2): dd ee ff')
+        problem_page.click_hint()
+        self.assertEqual(problem_page.hint_text, u'Hint (1 of 2): aa bb cc')
+        # Check corresponding tracking events
+        actual_events = self.wait_for_events(
+            event_filter={'event_type': 'edx.problem.hint.demandhint_displayed'},
+            number_of_matches=3
+        )
+        self.assert_events_match(
+            [
+                {'event': {u'hint_index': 0, u'hint_len': 2, u'hint_text': u'aa <a href="#">bb</a> cc'}},
+                {'event': {u'hint_index': 1, u'hint_len': 2, u'hint_text': u'<a href="#">dd  ee</a> ff'}},
+                {'event': {u'hint_index': 0, u'hint_len': 2, u'hint_text': u'aa <a href="#">bb</a> cc'}}
             ],
             actual_events)
 
